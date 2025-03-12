@@ -1,0 +1,17 @@
+*
+
+!.gitignore
+!.gitattributes
+!README.md
+
+!definitions
+!definitions/*
+!definitions/**/*
+
+!boards
+!boards/*
+!boards/**/*
+
+!fonts
+!fonts/FontAwesome5-Solid+Brands+Regular.woff
+!fonts/materialdesignicons-webfont.ttf
