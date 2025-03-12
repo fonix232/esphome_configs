@@ -1,0 +1,10 @@
+---
+font:
+  - file: "fonts/FontAwesome5-Solid+Brands+Regular.woff"
+    size: ${font_size}
+    id: ${font_name}
+    bpp: 4
+    glyphs: [
+      "\uF00C",
+      "\uF1EB"
+    ]

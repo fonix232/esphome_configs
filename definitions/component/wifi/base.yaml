@@ -1,0 +1,4 @@
+---
+wifi:
+  ap: {}
+  use_address: ${name}-${mac_suffix}.local

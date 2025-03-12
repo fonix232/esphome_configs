@@ -1,0 +1,5 @@
+---
+web_server:
+  local: true
+  version: 3
+  port: 80

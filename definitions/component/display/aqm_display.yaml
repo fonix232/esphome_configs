@@ -1,0 +1,17 @@
+---
+packages:
+  display_base: !include
+    file: base/ssd1351.yaml
+    vars:
+      display_model: "SSD1351 128x128"
+      display_dc_pin: GPIO18
+      display_reset_pin: GPIO16
+      display_cs_pin: GPIO15
+      display_mosi_pin: GPIO05
+      display_clk_pin: GPIO08
+
+display:
+  - id: !extend main_display
+    data_rate: 10MHz
+    auto_clear_enabled: False
+    rotation: 90

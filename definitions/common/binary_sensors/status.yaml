@@ -1,0 +1,4 @@
+---
+platform: status
+name: "${friendly_name} Status"
+id: system_status

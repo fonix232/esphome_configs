@@ -1,0 +1,4 @@
+---
+bluetooth_proxy: {}
+
+<<: !include tracker.yaml

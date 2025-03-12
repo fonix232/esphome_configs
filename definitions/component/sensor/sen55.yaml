@@ -1,0 +1,257 @@
+---
+i2c:
+  sda: ${i2c_sda_pin}
+  scl: ${i2c_scl_pin}
+  scan: ${i2c_scan}
+  id: bus_a
+  frequency: ${i2c_frequency}
+
+sensor:
+  - platform: sen5x
+    id: sen55
+    address: 0x69
+    i2c_id: bus_a
+    pm_1_0:
+      name: "PM <1µm Weight concentration"
+      id: pm_1_0
+      accuracy_decimals: 2
+    pm_2_5:
+      name: "PM <2.5µm Weight concentration"
+      id: pm_2_5
+      accuracy_decimals: 2
+    pm_4_0:
+      name: "PM <4µm Weight concentration"
+      id: pm_4_0
+      accuracy_decimals: 2
+    pm_10_0:
+      name: "PM <10µm Weight concentration"
+      id: pm_10_0
+      accuracy_decimals: 2
+    temperature:
+      name: "Temperature"
+      accuracy_decimals: 2
+    humidity:
+      name: "Humidity"
+      accuracy_decimals: 2
+    voc:
+      name: "VOC"
+      id: voc_index
+      algorithm_tuning:
+        index_offset: 100
+        learning_time_offset_hours: 12
+        learning_time_gain_hours: 12
+        gating_max_duration_minutes: 180
+        std_initial: 50
+        gain_factor: 230
+    nox:
+      name: "NOx"
+      id: nox_index
+      algorithm_tuning:
+        index_offset: 100
+        learning_time_offset_hours: 12
+        learning_time_gain_hours: 12
+        gating_max_duration_minutes: 180
+        std_initial: 50
+        gain_factor: 230
+    temperature_compensation:
+      offset: 0
+      normalized_offset_slope: 0
+      time_constant: 0
+    acceleration_mode: low
+    store_baseline: true
+    update_interval: 10s
+
+  - platform: template
+    name: "PM <1µm 1-Hour Mean"
+    id: pm_1_0_mean_1h
+    state_class: "measurement"
+    device_class: pm1
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_1_0).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 360
+          send_every: 1
+      - delta: 1.0
+  
+  - platform: template
+    name: "PM <2.5µm 1-Hour Mean"
+    id: pm_2_5_mean_1h
+    state_class: "measurement"
+    device_class: pm25
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_2_5).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 360
+          send_every: 1
+      - delta: 1.0
+
+  - platform: template
+    name: "PM <4µm 1-Hour Mean"
+    id: pm_4_0_mean_1h
+    state_class: "measurement"
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_4_0).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 360
+          send_every: 1
+      - delta: 1.0
+
+  - platform: template
+    name: "PM <10µm 1-Hour Mean"
+    id: pm_10_0_mean_1h
+    state_class: "measurement"
+    device_class: pm10
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_10_0).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 360
+          send_every: 1
+      - delta: 1.0
+
+  - platform: template
+    name: "PM <1µm 24-Hour Mean"
+    id: pm_1_0_mean_24h
+    state_class: "measurement"
+    device_class: pm1
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_1_0).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 8640
+          send_every: 1
+      - delta: 1.0
+  
+  - platform: template
+    name: "PM <2.5µm 24-Hour Mean"
+    id: pm_2_5_mean_24h
+    state_class: "measurement"
+    device_class: pm25
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_2_5).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 8640
+          send_every: 1
+      - delta: 1.0
+
+  - platform: template
+    name: "PM <4µm 24-Hour Mean"
+    id: pm_4_0_mean_24h
+    state_class: "measurement"
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_4_0).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 8640
+          send_every: 1
+      - delta: 1.0
+
+  - platform: template
+    name: "PM <10µm 24-Hour Mean"
+    id: pm_10_0_mean_24h
+    state_class: "measurement"
+    device_class: pm10
+    unit_of_measurement: "µg/m³"
+    lambda: !lambda return id(pm_10_0).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 8640
+          send_every: 1
+      - delta: 1.0
+
+  - platform: template
+    name: "PM <2.5µm AQI"
+    id: pm_2_5_aqi
+    state_class: "measurement"
+    device_class: aqi
+    lambda: !lambda return id(pm_2_5).state;
+    filters:
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 0.0 -> 0.0
+            - 12.1 -> 50
+            - 35.4 -> 100
+            - 55.4 -> 150
+            - 150.4 -> 200
+            - 250.4 -> 300
+            - 350.4 -> 400
+            - 500.4 -> 500
+            - 1000.0 -> 501
+      - delta: 2
+
+  - platform: template
+    name: "PM <10µm AQI"
+    id: pm_10_0_aqi
+    state_class: "measurement"
+    device_class: aqi
+    lambda: !lambda return id(pm_10_0).state;
+    filters:
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 0.0 -> 0.0
+            - 55 -> 50
+            - 155 -> 100
+            - 255 -> 150
+            - 355 -> 200
+            - 425 -> 300
+            - 505 -> 400
+            - 605 -> 500
+            - 1000.0 -> 501
+      - delta: 2
+
+  - platform: template
+    name: "PM <2.5µm AQI 24h"
+    id: pm_2_5_aqi_24h
+    state_class: "measurement"
+    device_class: aqi
+    lambda: !lambda return id(pm_2_5_mean_24h).state;
+    filters:
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 0.0 -> 0.0
+            - 12.1 -> 50
+            - 35.4 -> 100
+            - 55.4 -> 150
+            - 150.4 -> 200
+            - 250.4 -> 300
+            - 350.4 -> 400
+            - 500.4 -> 500
+            - 1000.0 -> 501
+      - delta: 2
+
+  - platform: template
+    name: "PM <10µm AQI 24h"
+    id: pm_10_0_aqi_24h
+    state_class: "measurement"
+    device_class: aqi
+    lambda: !lambda return id(pm_10_0_mean_24h).state;
+    filters:
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 0.0 -> 0.0
+            - 55 -> 50
+            - 155 -> 100
+            - 255 -> 150
+            - 355 -> 200
+            - 425 -> 300
+            - 505 -> 400
+            - 605 -> 500
+            - 1000.0 -> 501
+      - delta: 2
+
+button:
+- platform: template
+  name: "Fan auto clean"
+  entity_category: diagnostic
+  on_press:
+    then:
+      - logger.log: Beginning SEN5X fan cleaning...
+      - sen5x.start_fan_autoclean: sen55

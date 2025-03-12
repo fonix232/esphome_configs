@@ -1,0 +1,3 @@
+---
+packages:
+  lcars_colors: !include lcars_colors.yaml

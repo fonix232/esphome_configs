@@ -1,0 +1,8 @@
+---
+light:
+  - platform: monochromatic
+    name: Laser
+    id: laser
+    output: ${laser_pwm}
+    restore_mode: ALWAYS_OFF
+    internal: True

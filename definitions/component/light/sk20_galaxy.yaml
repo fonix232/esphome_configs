@@ -1,0 +1,25 @@
+---
+light:
+  - platform: rgb
+    name: "Light"
+    id: rgb_light
+    restore_mode: RESTORE_DEFAULT_OFF
+    red: ${galaxy_red_pwm}
+    green: ${galaxy_green_pwm}
+    blue: ${galaxy_blue_pwm}
+    effects:
+      - random:
+          transition_length: 2.5s
+          update_interval: 3s
+      - random:
+          name: Random Slow
+          transition_length: 10s
+          update_interval: 5s
+      - flicker:
+          alpha: 95%
+          intensity: 5%
+      - strobe:
+      - pulse:
+          transition_length: 30s
+          min_brightness: 5%
+          max_brightness: 100%

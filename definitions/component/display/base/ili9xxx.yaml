@@ -1,0 +1,14 @@
+---
+display:
+  - platform: ili9xxx
+    id: main_display
+    model: ${display_model}
+    dc_pin: ${display_dc_pin}
+    reset_pin: ${display_reset_pin}
+    cs_pin: ${display_cs_pin}
+    invert_colors: ${display_invert_colors}
+    dimensions:
+      height: ${display_dimensions_height}
+      width: ${display_dimensions_width}
+      offset_height: ${display_dimensions_offset_height}
+      offset_width: ${display_dimensions_offset_width}

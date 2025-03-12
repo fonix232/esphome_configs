@@ -1,0 +1,9 @@
+---
+font:
+  - file:
+      type: gfonts
+      family: Antonio
+      weight: ${font_weight}
+    size: ${font_size}
+    id: ${font_name}
+    bpp: 4

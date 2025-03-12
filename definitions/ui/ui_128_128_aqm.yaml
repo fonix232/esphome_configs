@@ -1,0 +1,269 @@
+---
+packages:
+  lcars: !include lcars_theme.yaml
+  battery_icons: !include 
+    file: battery_icons.yaml
+    vars:
+      battery_font_size: 14
+      battery_font_name: battery_icons_14
+  lcars_font_small: !include
+    file: lcars_font.yaml
+    vars:
+      font_size: 14
+      font_weight: 100
+      font_name: lcars_font_small
+  lcars_font_medium: !include
+    file: lcars_font.yaml
+    vars:
+      font_size: 18
+      font_weight: 100
+      font_name: lcars_font_medium
+  lcars_font_large: !include
+    file: lcars_font.yaml
+    vars:
+      font_size: 32
+      font_weight: 100
+      font_name: lcars_font_large
+  icons_font_small: !include
+    file: standard_icons.yaml
+    vars:
+      font_size: 14
+      font_name: icons_font_small
+
+lvgl:
+  disp_bg_color: lcars_background
+  default_font: lcars_font_small
+  border_width: 0
+  outline_width: 0
+
+  style_definitions:
+    - id: header_footer
+      bg_color: lcars_background
+      border_color: lcars_gold
+      text_color: lcars_text
+      width: 100%
+      height: 24
+      radius: 4
+      border_width: 1
+      outline_width: 0
+      border_side:
+        - LEFT
+        - BOTTOM
+        - RIGHT
+    - id: page_style
+      bg_color: lcars_background
+      border_color: lcars_gold
+      text_color: lcars_text
+      width: 100%
+      height: 100
+      border_width: 0
+      outline_width: 0
+      y: 28
+
+  top_layer:
+    bg_color: lcars_background
+    widgets:
+      - obj:
+          align: top_mid
+          styles: header_footer
+          pad_all: 0
+          outline_width: 1
+          id: top_layer_top_bar
+          widgets:
+            - label:
+                text: "--:--:--"
+                id: label_status_time
+                align: top_mid
+                text_font: lcars_font_small
+                text_align: center
+                text_color: lcars_gold
+            - label: 
+                text: "\uF1EB"
+                id: icon_status_api
+                text_font: icons_font_small
+                hidden: false
+                align: top_right
+                x: -5
+                y: 4
+                text_align: right
+                text_color: lcars_mars
+            - label:
+                text: "\U000F0091"
+                id: icon_status_battery
+                text_font: battery_icons_14
+                hidden: false
+                align: top_left
+                x: 5
+                y: 4
+                text_align: left
+                text_color: lcars_space_white
+      - obj:
+          align: bottom_mid
+          styles: header_footer
+          outline_width: 1
+          id: top_layer_bottom_bar
+          hidden: True
+
+  pages:
+    - id: aqi_2_5_page
+      styles: page_style
+      width: 128
+      height: 100
+      y: 28
+      widgets:
+        - arc:
+            id: aqi_pm_2_5_indicator
+            arc_rounded: True
+            width: 90
+            height: 90
+            border_width: 0
+            outline_width: 0
+            align: bottom_mid
+            arc_color: lcars_background
+            on_value:
+              then:
+                - lvgl.arc.update:
+                    id: aqi_pm_2_5_indicator
+                    indicator:
+                      arc_color: !lambda |-
+                        auto selected_color = id(lcars_space_white);
+
+                        if (x <= 16.66) {
+                          selected_color = id(lcars_green);
+                        } else if ( x <= 33.33) {
+                          selected_color = id(lcars_yellow);
+                        } else if ( x <= 50) {
+                          selected_color = id(lcars_orange);
+                        } else if ( x <= 66.67) {
+                          selected_color = id(lcars_red);
+                        } else if (x <= 83.33) {
+                          selected_color = id(lcars_lilac);
+                        } else if (x <= 100) {
+                          selected_color = id(lcars_mars);
+                        } else {
+                          selected_color = id(lcars_space_white);
+                        }
+                        
+                        return lv_color_make(selected_color.red, selected_color.green, selected_color.blue);
+        - label:
+            id: aqi_pm_2_5_label
+            text: "!!!"
+            align: center
+            y: 18
+            text_font: lcars_font_large
+            text_color: lcars_gold
+            text_align: center
+
+time: 
+  - id: !extend esptime
+    on_time_sync:
+      - script.execute: time_update
+    on_time:
+      - seconds: '*'
+        then:
+          - script.execute: time_update
+
+script:
+  - id: time_update
+    then:
+      - lvgl.label.update:
+          id: label_status_time
+          text:
+            time_format: "%H:%M:%S"
+            time: esptime
+
+sensor:
+  - id: !extend battery_level
+    on_value:
+      then:
+        - lvgl.label.update:
+            id: icon_status_battery
+            text: !lambda |-
+              static char buf[10];
+              std::string icon;
+              auto battery = x;
+              if (battery > 95.0) {
+                icon = "\U000F0079";
+              } else if (x > 90.0) {
+                icon = "\U000F0082";
+              } else if (x > 80.0) {
+                icon = "\U000F0081";
+              } else if (x > 70.0) {
+                icon = "\U000F0080";
+              } else if (x > 60.0) {
+                icon = "\U000F007F";
+              } else if (x > 50.0) {
+                icon = "\U000F007E";
+              } else if (x > 40.0) {
+                icon = "\U000F007D";
+              } else if (x > 30.0) {
+                icon = "\U000F007C";
+              } else if (x > 20.0) {
+                icon = "\U000F007B";
+              } else if (x > 10.0) {
+                icon = "\U000F007A";
+              } else if (x > 0.0) {
+                icon = "\U000F008E";
+              } else {
+                icon = "\U000F0091";
+              }
+              snprintf(buf, sizeof(buf), "%s", icon.c_str());
+              return buf;
+  - platform: template
+    id: pm_2_5_aqi_lvgl
+    internal: True
+    update_interval: 1s
+    lambda: !lambda return id(pm_2_5_mean_24h).state;
+    filters:
+      - delta: 1.0
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 0 -> 16.66
+            - 50 -> 16.66
+
+            - 50.1 -> 33.33
+            - 100 -> 33.33
+
+            - 100.1 -> 50
+            - 150 -> 50
+
+            - 150.1 -> 66.67
+            - 200 -> 66.67
+
+            - 200.1 -> 83.33
+            - 300 -> 83.33
+
+            - 300.1 -> 100
+            - 501 -> 100
+      - delta: 15
+    on_value: 
+      then:
+        - lvgl.arc.update:
+            id: aqi_pm_2_5_indicator
+            value: !lambda return x;
+    on_raw_value:
+      then:
+        - lvgl.label.update:
+            id: aqi_pm_2_5_label
+            text: 
+              format: "%.0f"
+              args: [ 'x' ]
+
+api:
+  on_client_connected:
+    - if:
+        condition:
+          lambda: 'return (0 == client_info.find("Home Assistant "));'
+        then:
+          - lvgl.widget.update:
+              id: icon_status_api
+              text_color: lcars_green
+  on_client_disconnected:
+    - if:
+        condition:
+          lambda: 'return (0 == client_info.find("Home Assistant "));'
+        then:
+          - lvgl.widget.update:
+              id: icon_status_api
+              text_color: lcars_mars

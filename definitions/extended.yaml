@@ -1,0 +1,7 @@
+---
+packages:
+  sensors: !include common/sensors.yaml
+  time: !include common/time.yaml
+  switches: !include common/switches.yaml
+  webserver: !include common/webserver.yaml
+  

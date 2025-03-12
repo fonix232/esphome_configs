@@ -1,0 +1,6 @@
+---
+bluetooth_proxy:
+  active: True
+  cache_services: True
+
+<<: !include tracker.yaml

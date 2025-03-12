@@ -1,0 +1,36 @@
+---
+color:
+  - id: lcars_space_white
+    hex: f5f6fa
+  - id: lcars_violet_creme
+    hex: ddbbff
+  - id: lcars_green
+    hex: 33cc99
+  - id: lcars_magenta
+    hex: cc4499
+  - id: lcars_blue
+    hex: 4455ff
+  - id: lcars_yellow
+    hex: ffcc33
+  - id: lcars_violet
+    hex: 9944ff
+  - id: lcars_orange
+    hex: ff7700
+  - id: lcars_lilac
+    hex: "660099"
+  - id: lcars_red
+    hex: cc4444
+  - id: lcars_midnight
+    hex: 2129ff
+
+  - id: lcars_text
+    hex: cc77ff
+  - id: lcars_background
+    hex: "000000"
+
+  - id: lcars_ice
+    hex: 88ccff
+  - id: lcars_gold
+    hex: ffaa00
+  - id: lcars_mars
+    hex: ff2200

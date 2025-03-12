@@ -1,0 +1,40 @@
+---
+packages:
+  mcu: !include ../../mcu/tuya/cbu.yaml
+  base: !include ../../base.yaml
+
+# remote_receiver:
+#   pin: 
+#     number: P20
+#     inverted: true
+#     mode:
+#       input: true
+#       pullup: true
+#   dump: 
+#     - nec
+
+binary_sensor:
+  - platform: gpio
+    pin: 
+      number: P6
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: Power/Speed Button
+  - platform: gpio
+    pin: 
+      number: P7
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: Colour Button
+  - platform: gpio
+    pin: 
+      number: P8
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: Mode/Demo button

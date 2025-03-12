@@ -1,0 +1,6 @@
+---
+esp32:
+  variant: ESP32S2
+  board: esp32-s2-saola-1
+  framework:
+    type: arduino
