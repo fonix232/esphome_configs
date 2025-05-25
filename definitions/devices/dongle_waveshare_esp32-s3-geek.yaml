@@ -1,5 +1,5 @@
 ---
 packages:
-  board: !include ../board/waveshare/s3_geek_espidf.yaml
+  board: !include ../board/waveshare/s3_geek.espidf.yaml
   bt_proxy: !include ../component/bluetooth/proxy_espidf.yaml
   ui: !include ../ui/ui_240_135.yaml

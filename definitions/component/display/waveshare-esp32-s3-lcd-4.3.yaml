@@ -1,0 +1,45 @@
+---
+
+packages:
+  display_base: !include
+    file: base/rpi_dpi_rgb.yaml
+    vars:
+      display_width: 800
+      display_height: 480
+      display_de: GPIO5
+      display_hsync: GPIO46
+      display_vsync: GPIO3
+      display_reset: 
+        ch422g: ch422g_hub
+        number: 3
+        mode:
+          output: true
+      display_pclk: GPIO7
+      display_r1: GPIO1
+      display_r2: GPIO2
+      display_r3: GPIO42
+      display_r4: GPIO41
+      display_r5: GPIO40
+      display_g1: GPIO39
+      display_g2: GPIO0
+      display_g3: GPIO45
+      display_g4: GPIO48
+      display_g5: GPIO47
+      display_g6: GPIO21
+      display_b1: GPIO14
+      display_b2: GPIO38
+      display_b3: GPIO18
+      display_b4: GPIO17
+      display_b5: GPIO10
+  display_backlight_ch422g: !include
+    file: base/binary_backlight_ch422g.yaml
+    vars:
+      display_backlight_pin: 2
+      display_backlight_pin_inverted: False
+  display_backlight: !include
+    file: base/binary_backlight.yaml
+
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+  id: bus_a

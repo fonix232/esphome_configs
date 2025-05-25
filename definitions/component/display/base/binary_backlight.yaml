@@ -1,0 +1,7 @@
+---
+light:
+  - platform: binary
+    output: display_backlight_binary
+    name: "Display Backlight"
+    id: back_light
+    restore_mode: RESTORE_DEFAULT_ON

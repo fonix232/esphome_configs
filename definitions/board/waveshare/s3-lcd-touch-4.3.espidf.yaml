@@ -1,0 +1,4 @@
+---
+packages:
+  board_base: !include s3-lcd-touch-4.3.base.yaml
+  mcu: !include ../../mcu/espressif/esp32-s3.espidf.yaml

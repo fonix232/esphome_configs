@@ -14,11 +14,13 @@ packages:
       display_dimensions_width: 240
       display_dimensions_offset_height: 52
       display_dimensions_offset_width: 40
-  display_backlight: !include
-    file: base/pwm_backlight.yaml
+  display_backlight_ledc: !include
+    file: base/pwm_backlight_ledc.yaml
     vars:
       display_backlight_pin: 7
       display_backlight_pin_inverted: False
+  display_backlight: !include
+    file: base/pwm_backlight.yaml
 
 spi:
   mosi_pin: 
@@ -31,3 +33,36 @@ display:
     transform:
       swap_xy: True
       mirror_y: True
+
+globals:
+  - id: display_rotated
+    type: bool
+    restore_value: yes
+    initial_value: 'false'
+
+switch:
+  - platform: template
+    name: "Display Rotation"
+    id: display_rotation_switch
+    icon: mdi:screen-rotation
+    restore_mode: RESTORE_DEFAULT_OFF
+    lambda: |-
+      return id(display_rotated);
+    turn_on_action:
+      then:
+        - lambda: |-
+            auto display = id(main_display);
+            display->set_swap_xy(true);
+            display->set_mirror_y(false);
+            display->set_mirror_x(true);
+            id(display_rotated) = true;
+            display->setup();
+    turn_off_action:
+      then:
+        - lambda: |-
+            auto display = id(main_display);
+            display->set_swap_xy(true);
+            display->set_mirror_y(true);
+            display->set_mirror_x(false);
+            id(display_rotated) = false;
+            display->setup();

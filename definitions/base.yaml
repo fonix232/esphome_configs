@@ -8,6 +8,11 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: True
 
+external_components:
+  - source:
+      type: local
+      path: definitions/external_component
+
 packages:
   binary_sensors: !include common/binary_sensors.yaml
   buttons: !include common/buttons.yaml

@@ -7,4 +7,4 @@ esp32:
   board: adafruit_matrixportal_esp32s3
 
 packages:
-  mcu: !include ../../mcu/espressif/esp32-s3_arduino.yaml
+  mcu: !include ../../mcu/espressif/esp32-s3.arduino.yaml

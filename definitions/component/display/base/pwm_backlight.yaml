@@ -1,11 +1,4 @@
 ---
-output:
-  - platform: ledc
-    pin: 
-      number: ${display_backlight_pin}
-      inverted:  ${display_backlight_pin_inverted}
-    id: display_backlight_pwm
-
 light:
   - platform: monochromatic
     output: display_backlight_pwm
