@@ -1,5 +1,6 @@
 ---
 packages:
+  board: !include ../../board/waveshare/s3-zero/espidf.yaml
   rf_gateway: !include
     file: rf_gateway.yaml
     vars:

@@ -1,5 +1,4 @@
 ---
-
 spi:
   clk_pin: ${cc1101_clk_pin}
   mosi_pin: ${cc1101_mosi_pin}
