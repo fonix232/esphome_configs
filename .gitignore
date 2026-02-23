@@ -7,6 +7,9 @@
 !definitions
 !definitions/*
 !definitions/**/*
+definitions/external_component/*
+
+**/.esphome/*
 
 !boards
 !boards/*

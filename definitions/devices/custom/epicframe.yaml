@@ -1,0 +1,20 @@
+---
+packages:
+  board: !include ../../board/sb-components/stackify/espidf.yaml
+  display_base: !include
+    file: ../../component/display/waveshare_epaper_7.3in_e.yaml
+    vars:
+      epaper_spi_id: spi_bus_display
+      epaper_spi_clk: GPIO3
+      epaper_spi_din: GPIO10
+      epaper_spi_cs: GPIO20
+      epaper_spi_dc: GPIO46
+      epaper_busy: GPIO12
+      epaper_reset: GPIO38 # GPIO47 # GPIO38
+  display_image: !include
+    file: ../../component/screen/image_view.yaml
+    vars:
+      image_url: https://miro.medium.com/v2/resize:fit:800/1*M6SWiknDLwxOucgt16HL2w.png
+      image_format: PNG
+      image_type: RGB
+      image_size: 800x480

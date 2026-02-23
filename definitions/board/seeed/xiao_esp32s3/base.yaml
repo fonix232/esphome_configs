@@ -1,0 +1,26 @@
+---
+packages:
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+
+esp32:
+  board: esp32-s3-devkitc-1
+  cpu_frequency: 240MHz
+  flash_size: 8MB
+
+# esphome:
+#   platformio_options:
+#     build_flags: -DBOARD_HAS_PSRAM
+#     board_build.arduino.memory_type: qio_opi
+#     board_build.f_flash: 80000000L
+#     board_build.flash_mode: qio 
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2c:
+  - id: internal_i2c
+    sda: GPIO5
+    scl: GPIO6
+    frequency: 400kHz

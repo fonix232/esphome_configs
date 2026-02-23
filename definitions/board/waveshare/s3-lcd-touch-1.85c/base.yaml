@@ -1,0 +1,63 @@
+---
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  flash_size: 16MB
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2c:
+  - id: i2c_0
+    scl: GPIO10
+    sda: GPIO11
+
+spi:
+  - id: spi_0
+    miso_pin: GPIO16
+    mosi_pin: GPIO17
+    clk_pin: GPIO14
+  - id: spi_1
+    clk_pin: GPIO40
+    type: quad
+    data_pins: [ GPIO46, GPIO45, GPIO42, GPIO41 ]
+
+time:
+  - platform: pcf85063
+    id: pcf85063_time
+
+pca9554:
+  - id: 'pca9554a_device'
+    address: 0x20
+
+sensor:
+  - platform: adc
+    pin: GPIO8
+    id: bat_adc_raw
+    attenuation: 12db
+    update_interval: 10s
+    name: "Battery ADC Raw"
+
+  - platform: template
+    name: "Battery Voltage"
+    id: bat_voltage
+    unit_of_measurement: "V"
+    icon: "mdi:battery"
+    update_interval: 10s
+    lambda: |-
+      // Measurement_offset as per your code
+      const float Measurement_offset = 0.994500;
+      // ESPHome's ADC sensor returns a value from 0.0 to 3.3V (after attenuation)
+      // Your formula: (voltage[0][0] * 3.0 / 1000.0) / Measurement_offset
+      // Here, adc_raw is in volts, so multiply by 1000 to get mV, then *3.0, then /1000, then /offset
+      // This simplifies to: (adc_raw * 3.0) / Measurement_offset
+      return (id(bat_adc_raw).state * 3.0) / Measurement_offset;
+
+packages:
+  display: !include ../../component/display/waveshare-esp32-s3-lcd-1.85c.yaml
+  audio: !include ../../component/audio/waveshare-esp32-s3-lcd-1.85c.yaml
+  base: !include ../../base.yaml
+  extended: !include ../../extended.yaml

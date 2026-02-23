@@ -1,0 +1,19 @@
+---
+
+sensor:
+  - platform: sd_mmc_card
+    type: used_space
+    name: "SD card used space"
+
+  - platform: sd_mmc_card
+    type: total_space
+    name: "SD card total space"
+  
+  - platform: sd_mmc_card
+    type: free_space
+    name: "SD card free space"
+
+text_sensor:
+  - platform: sd_mmc_card
+    sd_card_type:
+      name: "SD card type"

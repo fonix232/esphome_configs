@@ -1,0 +1,4 @@
+---
+packages:
+  board: !include ../../board/seeed/respeaker_lite/espidf.yaml
+  audio: !include ../../component/audio/respeaker_lite.yaml

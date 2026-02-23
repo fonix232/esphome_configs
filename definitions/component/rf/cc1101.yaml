@@ -1,0 +1,34 @@
+---
+
+spi:
+  clk_pin: ${cc1101_clk_pin}
+  mosi_pin: ${cc1101_mosi_pin}
+  miso_pin: ${cc1101_gdo1_pin}
+
+
+cc1101:
+  id: cc1101_device
+  cs_pin: ${cc1101_cs_pin}
+
+remote_transmitter:
+  id: cc1101_transmitter
+  carrier_duty_percent: 100%
+  non_blocking: true
+  pin: ${cc1101_gdo0_pin}
+  on_transmit:
+    then:
+      - cc1101.begin_tx
+  on_complete:
+    then:
+      - cc1101.begin_rx
+
+remote_receiver:
+  - id: cc1101_receiver
+    pin: ${cc1101_gdo2_pin}  # Must match GDO2
+    dump: rc_switch
+    # Settings to optimize recognition of RF devices
+    tolerance: 50%
+    filter: 250us
+    idle: 4ms
+
+

@@ -1,0 +1,3 @@
+---
+external_components:
+  - source: github://n-serrette/esphome_sd_card

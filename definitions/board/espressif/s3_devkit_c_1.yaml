@@ -1,3 +1,0 @@
----
-packages:
-  mcu: !include ../../mcu/espressif/esp32-s3.arduino.yaml

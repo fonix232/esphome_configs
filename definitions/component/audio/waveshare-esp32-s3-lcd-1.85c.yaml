@@ -1,0 +1,34 @@
+---
+packages:
+  mixer_speaker: !include common/mixer_speaker.yaml
+  mediaplayer: !include common/mediaplayer_assistant.yaml
+
+i2s_audio:
+  - id: i2s_in
+    i2s_lrclk_pin: GPIO2
+    i2s_bclk_pin: GPIO15
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO38
+    i2s_bclk_pin: GPIO48
+
+microphone:
+  - id: mic_0
+    platform: i2s_audio
+    adc_type: external
+    i2s_audio_id: i2s_in
+    i2s_din_pin: GPIO39
+    channel: right
+    # pdm: true
+    sample_rate: 16000
+    bits_per_sample: 32bit
+    # correct_dc_offset: true
+
+speaker:
+  - id: speaker_0
+    platform: i2s_audio
+    dac_type: external
+    i2s_audio_id: i2s_out
+    i2s_dout_pin: GPIO47
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    channel: left

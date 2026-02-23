@@ -18,6 +18,7 @@ packages:
   buttons: !include common/buttons.yaml
   api: !include common/api.yaml
   ota: !include common/ota.yaml
+  time: !include common/time.yaml
   logger: !include common/logger.yaml
   captive_portal: !include common/captive_portal.yaml
   wifi: !include component/wifi/base.yaml

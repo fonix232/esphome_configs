@@ -247,6 +247,18 @@ sensor:
             - 1000.0 -> 501
       - delta: 2
 
+  - platform: aqi
+    name: "Air Quality Index US"
+    pm_2_5: pm_2_5
+    pm_10_0: pm_10_0
+    calculation_type: AQI
+
+  - platform: aqi
+    name: "Air Quality Index EU"
+    pm_2_5: pm_2_5
+    pm_10_0: pm_10_0
+    calculation_type: CAQI
+
 button:
 - platform: template
   name: "Fan auto clean"

@@ -1,0 +1,17 @@
+---
+climate:
+  - platform: ${ir_climate_platform}
+    name: "${device_name} Climate"
+    infrared_transmitter_id: ${ir_transmitter_id}
+    # min_temperature: 16 °C
+    # max_temperature: 30 °C
+    # default_target_temperature_low: 20 °C
+    # default_target_temperature_high: 24 °C
+    # target_temperature_step: 1 °C
+    # visual_min_temperature: 16 °C
+    # visual_max_temperature: 30 °C
+    # visual_temperature_step: 1 °C
+    # cold_tolerance: 0.5 °C
+    # hot_tolerance: 0.5 °C
+    # away_config:
+    #   temperature: 18 °C

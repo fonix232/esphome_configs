@@ -1,0 +1,31 @@
+---
+packages:
+  mixer_speaker: !include common/mixer_speaker.yaml
+  mediaplayer: !include common/mediaplayer_assistant.yaml
+
+i2s_audio:
+  - id: i2s_audio_bus
+    i2s_lrclk_pin: GPIO33
+    i2s_bclk_pin: GPIO19
+
+microphone:
+  - id: mic_0
+    platform: i2s_audio
+    adc_type: external
+    i2s_audio_id: i2s_audio_bus
+    i2s_din_pin: GPIO23
+    pdm: true
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    correct_dc_offset: true
+
+speaker:
+  - id: speaker_0
+    platform: i2s_audio
+    dac_type: external
+    i2s_audio_id: i2s_audio_bus
+    i2s_dout_pin: GPIO22
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    channel: stereo  # The Echo has poor playback audio quality when using mon audio
+    buffer_duration: 60ms

@@ -3,4 +3,4 @@ bluetooth_proxy:
   active: True
   cache_services: True
 
-<<: !include tracker.yaml
+<<: !include tracker_espidf.yaml

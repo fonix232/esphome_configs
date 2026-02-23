@@ -1,0 +1,7 @@
+---
+packages:
+  board: !include ../../board/seeed/sensecap_watcher/espidf.yaml
+  audio: !include ../../component/audio/seeed_sensecap_watcher.yaml
+  wakeword: !include ../../component/audio/wakeword.yaml
+  voice: !include ../../component/audio/voice.yaml
+  display: !include ../../component/display/sensecap_watcher_display.yaml

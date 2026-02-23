@@ -1,0 +1,20 @@
+---
+packages:
+  board: !include ../../board/espressif/devkitc-1/espidf.yaml
+  display_base: !include
+    file: ../../component/display/waveshare_epaper_7.3in_e.yaml
+    vars:
+      epaper_spi_id: spi_bus_display
+      epaper_spi_clk: GPIO13
+      epaper_spi_din: GPIO14
+      epaper_spi_cs: GPIO12
+      epaper_spi_dc: GPIO11
+      epaper_busy: GPIO9
+      epaper_reset: GPIO10
+  boot_splash: !include
+    file: ../../ui/screens/boot.yaml
+    vars:
+      display_size: 800x480
+
+logger:
+  hardware_uart: UART0

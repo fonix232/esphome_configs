@@ -1,0 +1,12 @@
+---
+packages:
+  board: !include ../../board/waveshare/s3-zero/espidf.yaml
+  rf_light: !include 
+    file: ../../devices/rf/hallway_lights.yaml
+    vars:
+      cc1101_gdo0_pin: ${cc1101_gdo0_pin}
+      cc1101_cs_pin: ${cc1101_cs_pin}
+      cc1101_clk_pin: ${cc1101_clk_pin}
+      cc1101_mosi_pin: ${cc1101_mosi_pin}
+      cc1101_gdo1_pin: ${cc1101_gdo1_pin}
+      cc1101_gdo2_pin: ${cc1101_gdo2_pin}

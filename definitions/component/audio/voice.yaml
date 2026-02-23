@@ -1,0 +1,47 @@
+---
+select:
+  - platform: template
+    entity_category: config
+    name: Wake word engine location
+    id: wake_word_engine_location
+    optimistic: true
+    restore_value: true
+    options:
+      - In Home Assistant
+      - On device
+    initial_option: On device
+    on_value:
+      - if:
+          condition:
+            lambda: return x == "In Home Assistant";
+          then:
+            - micro_wake_word.stop:
+            - delay: 500ms
+            - lambda: id(va).set_use_wake_word(true);
+            - voice_assistant.start_continuous:
+      - if:
+          condition:
+            lambda: return x == "On device";
+          then:
+            - lambda: id(va).set_use_wake_word(false);
+            - voice_assistant.stop:
+            - delay: 500ms
+            - micro_wake_word.start:
+
+micro_wake_word:
+  id: micro_wake_word_0
+  microphone:
+    microphone: mic_0
+  vad:
+    model: github://esphome/micro-wake-word-models/models/v2/vad.json@main
+  models:
+    - model: github://esphome/micro-wake-word-models/models/v2/hey_jarvis.json@main
+  on_wake_word_detected:
+    - voice_assistant.start:
+        wake_word: !lambda return wake_word;
+
+voice_assistant:
+  microphone: mic_0
+  micro_wake_word: micro_wake_word_0
+  media_player: media_player_0
+  use_wake_word: true

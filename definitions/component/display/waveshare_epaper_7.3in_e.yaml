@@ -1,0 +1,73 @@
+---
+# HAT Header layout:
+#
+# |     |  3V3   | △ | | ▼ | 5V PWR |  5V  |
+# |     | PIN 3  | ○ | | ▼ | 5V PWR |  5V  |
+# |     | PIN 5  | ○ | | ■ |  GND   | GND  |
+# |     | PIN 7  | ○ | | ○ | PIN 8  |      |
+# | GND |  GND   | ■ | | ○ | PIN 10 |      |
+# | RST | PIN 11 | ● | | ○ | PIN 12 |      |
+# |     | PIN 13 | ○ | | ■ |  GND   | GND  |
+# |     | PIN 15 | ○ | | ○ | PIN 16 |      |
+# |     |  3V3   | △ | | ● | PIN 18 | BUSY |
+# | DIN | PIN 19 | ● | | ■ |  GND   |      |
+# |     | PIN 21 | ○ | | ● | PIN 22 |  DC  |
+# | SCK | PIN 23 | ● | | ● | PIN 24 |  CS  |
+# |     |  GND   | ■ | | ○ | PIN 26 |      |
+# |     |   NC   | ✕ | | ✕ |   NC   |      |
+# |     | PIN 29 | ○ | | □ |  GND   |      |
+# |     | PIN 31 | ○ | | ○ | PIN 32 |      |
+# |     | PIN 33 | ○ | | □ |  GND   |      |
+# |     | PIN 35 | ○ | | ○ | PIN 36 |      |
+# |     | PIN 37 | ○ | | ○ | PIN 38 |      |
+# |     |  GND   | □ | | ○ |  GND   |      |
+# 
+#
+# Icons:
+# ○ | ● - pin | in use
+# △ | ▲ - 3V3
+# ▽ | ▼ - 5V
+# □ | ■ - GND
+# ⨯ - NC
+
+spi:
+  - id: spi_bus_display
+    clk_pin: ${epaper_spi_clk}
+    mosi_pin: ${epaper_spi_din}
+
+display:
+  - id: main_display
+    platform: epaper_spi
+    model: 7.3in-spectra-e6
+    cs_pin: ${epaper_spi_cs}
+    dc_pin: ${epaper_spi_dc}
+    busy_pin:  
+      number: ${epaper_busy}
+      inverted: true
+    reset_pin: 
+      number: ${epaper_reset}
+      inverted: false
+    update_interval: never
+    # pages:
+    #   - id: test
+    #     lambda: |-
+    #       auto width = it.get_width();
+    #       auto height = it.get_height();
+    #       auto center_x = width / 2;
+    #       auto center_y = height / 2;
+
+    #       auto black = Color(0, 0, 0);
+    #       auto red = Color(255, 0, 0);
+
+    #       //it.filled_rectangle(center_x - 40, center_y - 40, 80, 80, black);
+
+    #       // auto black = Color(0, 0, 0);
+    #       // auto red = Color(255, 0, 0);
+    #       // auto green = Color(0, 255, 0);
+    #       // auto blue = Color(0, 0, 255);
+    #       // auto white = Color(255, 255, 255);
+    #       // it.filled_circle(20, 32, 15, black);
+    #       // it.filled_circle(40, 32, 15, red);
+    #       // it.filled_circle(60, 32, 15, green);
+    #       // it.filled_circle(80, 32, 15, blue);
+    #       // it.filled_circle(100, 32, 15, white);

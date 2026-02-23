@@ -1,25 +1,25 @@
 ---
 packages:
-  lcars: !include lcars_theme.yaml
-  battery_icons: !include 
-    file: battery_icons.yaml
+  lcars: !include themes/lcars_theme.yaml
+  battery_icon: !include 
+    file: icons/mdi_battery.yaml
     vars:
       battery_font_size: 14
-      battery_font_name: battery_icons_14
+      battery_font_name: 
   lcars_font_small: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 14
       font_weight: 100
       font_name: lcars_font_small
   lcars_font_medium: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 18
       font_weight: 100
       font_name: lcars_font_medium
   lcars_font_large: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 32
       font_weight: 100
@@ -90,7 +90,7 @@ lvgl:
             - label:
                 text: "\U000F0091"
                 id: icon_status_battery
-                text_font: battery_icons_14
+                text_font: battery_icon_14
                 hidden: false
                 align: top_left
                 x: 5
@@ -155,7 +155,7 @@ lvgl:
             text_align: center
 
 time: 
-  - id: !extend esptime
+  - id: !extend homeassistant_time
     on_time_sync:
       - script.execute: time_update
     on_time:
@@ -170,7 +170,7 @@ script:
           id: label_status_time
           text:
             time_format: "%H:%M:%S"
-            time: esptime
+            time: homeassistant_time
 
 sensor:
   - id: !extend battery_level

@@ -1,20 +1,20 @@
 ---
 packages:
-  lcars: !include lcars_theme.yaml
+  lcars: !include themes/lcars_theme.yaml
   lcars_font_small: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 12
       font_weight: 100
       font_name: lcars_font_small
   lcars_font_medium: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 18
       font_weight: 100
       font_name: lcars_font_medium
   lcars_font_large: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 32
       font_weight: 100
@@ -37,5 +37,5 @@ display:
         it.filled_circle(it.get_width() * 0.95, 10, 4.5, id(lcars_mars));
       }
 
-      it.strftime((it.get_width() / 2), (it.get_height() / 3) * 1 + 5, id(lcars_font_medium), id(lcars_text), TextAlign::CENTER, "%Y-%m-%d", id(esptime).now());
-      it.strftime((it.get_width() / 2), (it.get_height() / 3) * 2 + 5, id(lcars_font_large), id(lcars_text), TextAlign::CENTER, "%H:%M:%S", id(esptime).now());
+      it.strftime((it.get_width() / 2), (it.get_height() / 3) * 1 + 5, id(lcars_font_medium), id(lcars_text), TextAlign::CENTER, "%Y-%m-%d", id(homeassistant_time).now());
+      it.strftime((it.get_width() / 2), (it.get_height() / 3) * 2 + 5, id(lcars_font_large), id(lcars_text), TextAlign::CENTER, "%H:%M:%S", id(homeassistant_time).now());

@@ -1,0 +1,11 @@
+---
+psram:
+  mode: octal
+  speed: 80MHz
+
+esp32:
+  board: adafruit_matrixportal_esp32s3
+
+packages:
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml

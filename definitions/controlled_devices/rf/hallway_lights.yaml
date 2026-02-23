@@ -1,0 +1,575 @@
+---
+# RF Code Constants
+substitutions:
+  rf_code_brightness_up: "111111111111111100000101"
+  rf_code_brightness_down: "111111111111111100000110"
+  rf_code_off: "111111111111111100000111"
+  rf_code_on: "111111111111111100001000"
+  rf_code_red: "111111111111111100001001"
+  rf_code_green: "111111111111111100001010"
+  rf_code_blue: "111111111111111100001011"
+  rf_code_white: "111111111111111100001100"
+  rf_code_dark_orange: "111111111111111100001101"
+  rf_code_light_green: "111111111111111100001110"
+  rf_code_purple: "111111111111111100001111"
+  rf_code_flash: "111111111111111100010000"
+  rf_code_orange: "111111111111111100010001"
+  rf_code_teal: "111111111111111100010010"
+  rf_code_light_purple: "111111111111111100010011"
+  rf_code_strobe: "111111111111111100010100"
+  rf_code_yellow: "111111111111111100010101"
+  rf_code_greenish_blue: "111111111111111100010110"
+  rf_code_dark_pink: "111111111111111100010111"
+  rf_code_fade: "111111111111111100011000"
+  rf_code_warm_white: "111111111111111100011001"
+  rf_code_light_blue: "111111111111111100011010"
+  rf_code_pink: "111111111111111100011011"
+  rf_code_smooth: "111111111111111100011100"
+
+esphome:
+  on_boot:
+    priority: -100  # Run after everything else is initialized
+    then:
+      - delay: 2s  # Wait for light to restore state
+      - lambda: |-
+          id(skip_rf_transmit) = false;
+          ESP_LOGI("main", "Boot complete, RF transmission enabled");
+
+globals:
+  - id: skip_rf_transmit
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  # Previous state tracking for change detection
+  - id: prev_state
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: prev_brightness
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: prev_color_mode
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: prev_red
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: prev_green
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: prev_blue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: prev_cold_white
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: prev_warm_white
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+
+light:
+  - platform: rgbww
+    name: "Hallway RGB Light"
+    id: hallway_light
+    red: output_red
+    green: output_green
+    blue: output_blue
+    cold_white: output_cw
+    warm_white: output_ww
+    cold_white_color_temperature: 6500 K
+    warm_white_color_temperature: 2700 K
+    color_interlock: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_state:
+      - delay: 50ms  # Brief delay for state to settle
+      - if:
+          condition:
+            lambda: 'return !id(skip_rf_transmit);'
+          then:
+            - script.execute: detect_and_sync_changes
+    effects:
+      - lambda:
+          name: "Flash"
+          update_interval: 1s
+          lambda: |-
+            id(send_rf_code).execute("${rf_code_flash}", "Flash");
+      - lambda:
+          name: "Strobe"
+          update_interval: 1s
+          lambda: |-
+            id(send_rf_code).execute("${rf_code_strobe}", "Strobe");
+      - lambda:
+          name: "Fade"
+          update_interval: 1s
+          lambda: |-
+            id(send_rf_code).execute("${rf_code_fade}", "Fade");
+      - lambda:
+          name: "Smooth"
+          update_interval: 1s
+          lambda: |-
+            id(send_rf_code).execute("${rf_code_smooth}", "Smooth");
+
+output:
+  - platform: template
+    id: output_red
+    type: float
+    write_action:
+      - lambda: return;
+  - platform: template
+    id: output_green
+    type: float
+    write_action:
+      - lambda: return;
+  - platform: template
+    id: output_blue
+    type: float
+    write_action:
+      - lambda: return;
+  - platform: template
+    id: output_cw
+    type: float
+    write_action:
+      - lambda: return;
+  - platform: template
+    id: output_ww
+    type: float
+    write_action:
+      - lambda: return;
+
+remote_receiver:
+  - id: !extend cc1101_receiver
+    on_rc_switch:
+      - then:
+          - lambda: 'ESP_LOGI("rf_light", "Remote receiver triggered: code=%llu (0x%llx)", x.code, x.code);'
+          # - lambda: id(skip_rf_transmit) = true;
+          # - script.execute:
+          #     id: handle_rf_code
+          #     code: !lambda 'return x.code;'
+          # - delay: 100ms
+          # - lambda: id(skip_rf_transmit) = false;
+          # - lambda: 'ESP_LOGI("rf_light", "Remote receiver handling complete");'
+
+script:
+  # Handle received RF codes and apply to light
+  - id: handle_rf_code
+    parameters:
+      code: uint64_t
+    then:
+      - lambda: |-
+          ESP_LOGI("rf_light", "handle_rf_code called with code: %llu (0x%llx)", code, code);
+          auto call = id(hallway_light).make_call();
+          
+          switch (code) {
+            case 0b${rf_code_brightness_up}: {
+              float current = id(hallway_light).current_values.get_brightness();
+              float new_brightness = (current < 0.2) ? 0.2 : (current < 0.4) ? 0.4 : (current < 0.6) ? 0.6 : (current < 0.8) ? 0.8 : 1.0;
+              call.set_brightness(new_brightness);
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Brightness Up %.0f%% -> %.0f%%", current * 100, new_brightness * 100);
+              break;
+            }
+            
+            case 0b${rf_code_brightness_down}: {
+              float current = id(hallway_light).current_values.get_brightness();
+              float new_brightness = (current >= 0.9) ? 0.8 : (current >= 0.7) ? 0.6 : (current >= 0.5) ? 0.4 : 0.2;
+              call.set_brightness(new_brightness);
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Brightness Down %.0f%% -> %.0f%%", current * 100, new_brightness * 100);
+              break;
+            }
+            
+            case 0b${rf_code_off}:
+              id(hallway_light).turn_off().perform();
+              ESP_LOGI("rf_light", "RF: OFF");
+              break;
+            
+            case 0b${rf_code_on}:
+              id(hallway_light).turn_on().perform();
+              ESP_LOGI("rf_light", "RF: ON");
+              break;
+            
+            case 0b${rf_code_red}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(1.0, 0.0, 0.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Red");
+              break;
+            
+            case 0b${rf_code_green}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.0, 1.0, 0.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Green");
+              break;
+            
+            case 0b${rf_code_blue}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.0, 0.0, 1.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Blue");
+              break;
+            
+            case 0b${rf_code_white}:
+              call.set_color_mode(ColorMode::COLD_WARM_WHITE);
+              call.set_color_temperature(6500.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: White");
+              break;
+            
+            case 0b${rf_code_dark_orange}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(1.0, 0.35, 0.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Dark Orange");
+              break;
+            
+            case 0b${rf_code_light_green}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.2, 1.0, 0.2);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Light Green");
+              break;
+            
+            case 0b${rf_code_purple}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.5, 0.0, 1.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Purple");
+              break;
+            
+            case 0b${rf_code_flash}:
+              call.set_effect("Flash");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Flash");
+              break;
+            
+            case 0b${rf_code_orange}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(1.0, 0.65, 0.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Orange");
+              break;
+            
+            case 0b${rf_code_teal}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.0, 0.5, 1.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Teal");
+              break;
+            
+            case 0b${rf_code_light_purple}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.75, 0.25, 1.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Light Purple");
+              break;
+            
+            case 0b${rf_code_strobe}:
+              call.set_effect("Strobe");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Strobe");
+              break;
+            
+            case 0b${rf_code_yellow}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(1.0, 1.0, 0.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Yellow");
+              break;
+            
+            case 0b${rf_code_greenish_blue}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.0, 0.75, 1.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Greenish Blue");
+              break;
+            
+            case 0b${rf_code_dark_pink}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(1.0, 0.0, 0.4);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Dark Pink");
+              break;
+            
+            case 0b${rf_code_fade}:
+              call.set_effect("Fade");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Fade");
+              break;
+            
+            case 0b${rf_code_warm_white}:
+              call.set_color_mode(ColorMode::COLD_WARM_WHITE);
+              call.set_color_temperature(2700.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Warm White");
+              break;
+            
+            case 0b${rf_code_light_blue}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(0.4, 0.6, 1.0);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Light Blue");
+              break;
+            
+            case 0b${rf_code_pink}:
+              call.set_color_mode(ColorMode::RGB);
+              call.set_rgb(1.0, 0.2, 0.8);
+              call.set_effect("None");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Pink");
+              break;
+            
+            case 0b${rf_code_smooth}:
+              call.set_effect("Smooth");
+              call.perform();
+              ESP_LOGI("rf_light", "RF: Smooth");
+              break;
+            
+            default:
+              ESP_LOGW("rf_light", "RF: Unknown code: %llu", code);
+              break;
+          }
+          
+          ESP_LOGI("rf_light", "handle_rf_code completed for code: %llu", code);
+  
+  # Parameterized script to send any RF code
+  - id: send_rf_code
+    parameters:
+      code: string
+      name: string
+    then:
+      - lambda: |-
+          ESP_LOGI("rf_light", "send_rf_code called: name=%s skip=%d", name.c_str(), id(skip_rf_transmit));
+      - if:
+          condition:
+            lambda: 'return id(skip_rf_transmit);'
+          then:
+            - lambda: 'ESP_LOGI("rf_light", "Skipping RF transmission for %s (skip flag set)", name.c_str());'
+          else:
+            - lambda: 'ESP_LOGI("rf_light", "Sending RF Code: %s (%s)", name.c_str(), code.c_str());'
+            - remote_transmitter.transmit_rc_switch_raw:
+                code: !lambda 'return code;'
+                protocol: 1
+                repeat:
+                  times: 10
+                  wait_time: 0s
+            - lambda: 'ESP_LOGI("rf_light", "RF Code %s sent", name.c_str());'
+  
+  # Detect what changed and sync only those changes to RF light
+  - id: detect_and_sync_changes
+    mode: queued
+    max_runs: 2
+    then:
+      - lambda: |-
+          // Use remote_values (target state) not current_values (transitioning state)
+          auto values = id(hallway_light).remote_values;
+          bool state = values.is_on();
+          float brightness = values.get_brightness();
+          auto color_mode = values.get_color_mode();
+          float r = values.get_red();
+          float g = values.get_green();
+          float b = values.get_blue();
+          float cw = values.get_cold_white();
+          float ww = values.get_warm_white();
+          
+          // Snap brightness to discrete levels (0.2, 0.4, 0.6, 0.8, 1.0)
+          if (state && brightness > 0.0f) {
+            float snapped = 0.2f;
+            if (brightness > 0.9f) snapped = 1.0f;
+            else if (brightness > 0.7f) snapped = 0.8f;
+            else if (brightness > 0.5f) snapped = 0.6f;
+            else if (brightness > 0.3f) snapped = 0.4f;
+            
+            if (abs(brightness - snapped) > 0.01f) {
+              ESP_LOGD("rf_light", "Snapping brightness %.0f%% -> %.0f%%", brightness * 100, snapped * 100);
+              auto call = id(hallway_light).make_call();
+              call.set_brightness(snapped);
+              id(skip_rf_transmit) = true;
+              call.perform();
+              delay(50);
+              id(skip_rf_transmit) = false;
+              brightness = snapped;
+            }
+          }
+          
+          // Detect what changed
+          bool state_changed = (state != id(prev_state));
+          bool brightness_changed = (abs(brightness - id(prev_brightness)) > 0.01f);
+          bool color_mode_changed = ((int)color_mode != id(prev_color_mode));
+          bool rgb_changed = (abs(r - id(prev_red)) > 0.01f || 
+                              abs(g - id(prev_green)) > 0.01f || 
+                              abs(b - id(prev_blue)) > 0.01f);
+          bool white_changed = (abs(cw - id(prev_cold_white)) > 0.01f || 
+                                abs(ww - id(prev_warm_white)) > 0.01f);
+          
+          ESP_LOGI("rf_light", "Change detection: state=%d bright=%d mode=%d rgb=%d white=%d",
+                   state_changed, brightness_changed, color_mode_changed, rgb_changed, white_changed);
+          
+          // Update stored previous values
+          id(prev_state) = state;
+          id(prev_brightness) = brightness;
+          id(prev_color_mode) = (int)color_mode;
+          id(prev_red) = r;
+          id(prev_green) = g;
+          id(prev_blue) = b;
+          id(prev_cold_white) = cw;
+          id(prev_warm_white) = ww;
+          
+          // Send appropriate RF codes based on what changed
+          if (state_changed) {
+            // On/Off state changed - highest priority
+            if (state) {
+              id(send_rf_code).execute("${rf_code_on}", "On");
+              // Also send current color if turning on
+              if (color_mode & ColorCapability::COLOR_TEMPERATURE) {
+                if (ww > cw) {
+                  id(send_rf_code).execute("${rf_code_warm_white}", "Warm White");
+                } else {
+                  id(send_rf_code).execute("${rf_code_white}", "White");
+                }
+              } else {
+                // Send current RGB color
+                id(send_color_rf).execute(r, g, b);
+              }
+            } else {
+              id(send_rf_code).execute("${rf_code_off}", "Off");
+            }
+          } else if (state && (color_mode_changed || rgb_changed || white_changed)) {
+            // Color changed while on
+            if (color_mode & ColorCapability::COLOR_TEMPERATURE) {
+              // White mode
+              if (ww > cw) {
+                id(send_rf_code).execute("${rf_code_warm_white}", "Warm White");
+              } else {
+                id(send_rf_code).execute("${rf_code_white}", "White");
+              }
+            } else {
+              // RGB color mode
+              id(send_color_rf).execute(r, g, b);
+            }
+          } else if (state && brightness_changed && !rgb_changed && !white_changed) {
+            // Only brightness changed - we can't send specific brightness via RF
+            // The physical lights have their own brightness control
+            // Just resend the current color to ensure sync
+            ESP_LOGD("rf_light", "Brightness-only change - resending current color");
+            if (color_mode & ColorCapability::COLOR_TEMPERATURE) {
+              if (ww > cw) {
+                id(send_rf_code).execute("${rf_code_warm_white}", "Warm White");
+              } else {
+                id(send_rf_code).execute("${rf_code_white}", "White");
+              }
+            } else {
+              id(send_color_rf).execute(r, g, b);
+            }
+          }
+  
+  # Send RGB color RF code based on color values
+  - id: send_color_rf
+    mode: single
+    parameters:
+      red: float
+      green: float
+      blue: float
+    then:
+      - lambda: |-
+          float r = red;
+          float g = green;
+          float b = blue;
+          std::string code = "";
+          std::string name = "";
+          
+          ESP_LOGD("rf_light", "Matching RGB color: R=%.2f G=%.2f B=%.2f", r, g, b);
+          
+          // RGB color matching with tolerance
+          if (r > 0.9 && g < 0.1 && b < 0.1) {
+            code = "${rf_code_red}";
+            name = "Red";
+          } else if (r < 0.1 && g > 0.9 && b < 0.1) {
+            code = "${rf_code_green}";
+            name = "Green";
+          } else if (r < 0.1 && g < 0.1 && b > 0.9) {
+            code = "${rf_code_blue}";
+            name = "Blue";
+          } else if (r > 0.9 && g > 0.9 && b > 0.9) {
+            code = "${rf_code_white}";
+            name = "White";
+          } else if (r > 0.9 && g > 0.9 && b < 0.1) {
+            code = "${rf_code_yellow}";
+            name = "Yellow";
+          } else if (r > 0.9 && g > 0.5 && b < 0.2) {
+            if (g < 0.7) {
+              code = "${rf_code_dark_orange}";
+              name = "Dark Orange";
+            } else {
+              code = "${rf_code_orange}";
+              name = "Orange";
+            }
+          } else if (r < 0.1 && g > 0.5 && b > 0.9) {
+            if (g < b) {
+              code = "${rf_code_teal}";
+              name = "Teal";
+            } else {
+              code = "${rf_code_greenish_blue}";
+              name = "Greenish Blue";
+            }
+          } else if (r > 0.5 && g < 0.3 && b > 0.8) {
+            if (r < 0.7) {
+              code = "${rf_code_purple}";
+              name = "Purple";
+            } else if (b < r) {
+              code = "${rf_code_light_purple}";
+              name = "Light Purple";
+            } else {
+              code = "${rf_code_purple}";
+              name = "Purple";
+            }
+          } else if (r > 0.9 && g < 0.4 && b > 0.6) {
+            if (b > 0.8) {
+              code = "${rf_code_pink}";
+              name = "Pink";
+            } else {
+              code = "${rf_code_dark_pink}";
+              name = "Dark Pink";
+            }
+          } else if (r < 0.5 && g > 0.7 && b < 0.4) {
+            code = "${rf_code_light_green}";
+            name = "Light Green";
+          } else if (r > 0.9 && g > 0.7 && b > 0.5) {
+            code = "${rf_code_warm_white}";
+            name = "Warm White";
+          } else if (r < 0.5 && g < 0.7 && b > 0.8) {
+            code = "${rf_code_light_blue}";
+            name = "Light Blue";
+          } else {
+            code = "${rf_code_white}";
+            name = "White";
+          }
+          
+          if (!code.empty()) {
+            ESP_LOGI("rf_light", "Matched RGB color: %s", name.c_str());
+            id(send_rf_code).execute(code, name);
+          } else {
+            ESP_LOGW("rf_light", "No RGB color matched");
+          }

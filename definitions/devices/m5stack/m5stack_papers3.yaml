@@ -1,0 +1,12 @@
+---
+packages:
+  board: !include ../../board/m5stack/papers3/espidf.yaml
+  boot_splash: !include 
+    file: ../../ui/screens/boot.yaml
+    vars:
+      display_size: 540x960
+
+esphome:
+  on_boot:
+    then:
+      - rtttl.play: 'StarTrek:d=4,o=5,b=63:32p,8f.,16a#,d#.6,8d6,16a#.,16g.,16c.6,f6'

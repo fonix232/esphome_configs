@@ -1,0 +1,7 @@
+---
+packages:
+  base: !include ../../../base.yaml
+  # extended: !include ../../../extended.yaml
+
+esp32:
+  board: wemos_d1_mini32

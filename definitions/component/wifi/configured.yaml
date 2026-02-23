@@ -1,4 +1,10 @@
 ---
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  fast_connect: True
+  networks:
+    # - ssid: !secret wifi_ssid
+    #   password: !secret wifi_password
+    #   hidden: False
+    - ssid: !secret wifi_iot_ssid
+      password: !secret wifi_iot_password
+      hidden: True

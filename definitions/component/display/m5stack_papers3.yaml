@@ -1,0 +1,18 @@
+---
+esp32:
+  framework:
+    components:
+      - name: "epdiy"
+        source: https://github.com/fonix232/epdiy
+        ref: main
+
+display:
+  - id: main_display
+    platform: epdiy_display
+    rotation: 270
+    # model: m5stack_papers3
+    update_interval: never
+  # - id: main_display
+  #   platform: ed047tc1_epdiy
+  #   rotation: 270
+  #   update_interval: never

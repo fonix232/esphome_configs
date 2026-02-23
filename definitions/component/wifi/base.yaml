@@ -2,3 +2,4 @@
 wifi:
   ap: {}
   use_address: ${name}-${mac_suffix}.local
+  # min_auth_mode: WPA2

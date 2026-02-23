@@ -1,0 +1,5 @@
+---
+platform: homeassistant
+id: homeassistant_time
+timezone: Europe/London
+update_interval: 1h

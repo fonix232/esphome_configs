@@ -1,4 +1,0 @@
----
-packages:
-  board_base: !include s3_zero.base.yaml
-  mcu: !include ../../mcu/espressif/esp32-s3.arduino.yaml

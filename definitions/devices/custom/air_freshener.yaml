@@ -1,0 +1,132 @@
+---
+packages:
+  board: !include ../../board/lilygo/t7_s3/espidf.yaml
+  # bt_proxy: !include ../component/bluetooth/proxy_espidf.yaml
+
+output:
+  - id: vapo_output
+    platform: gpio
+    pin: GPIO18
+
+fan:
+  - id: vaporiser
+    platform: binary
+    output: vapo_output
+    name: "Vapourisation"
+    restore_mode: RESTORE_DEFAULT_OFF
+
+binary_sensor:
+  - id: pir_sensor
+    platform: gpio
+    pin: 
+      number: GPIO14
+      allow_other_uses: True
+      mode:
+        input: True
+        pulldown: True
+    name: "PIR Sensor"
+    device_class: motion
+
+  - platform: template
+    name: "Presence Window"
+    id: presence_window
+    device_class: motion
+    lambda: |-
+      return id(pir_sensor).state;
+    filters:
+      - delayed_off: !lambda "return (int)id(detection_window).state * 60000;"
+    on_press:
+      then:
+        - script.execute: vaporiser_cycle
+    on_release:
+      then:
+        - script.execute: vaporiser_cycle
+
+switch:
+  - id: enable_vapo
+    name: "Vapourisation State"
+    platform: template
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    turn_on_action:
+      - script.stop: vaporiser_cycle
+      - delay: 100ms
+      - script.execute: vaporiser_cycle
+    turn_off_action:
+      - script.stop: vaporiser_cycle
+      - delay: 100ms
+      - script.execute: vaporiser_cycle
+
+number:
+  - platform: template
+    name: "Detection Window (min)"
+    id: detection_window
+    min_value: 1
+    max_value: 30
+    step: 1
+    initial_value: 5
+    optimistic: true
+
+  - platform: template
+    name: "Fan On Time (s)"
+    id: fan_on_time
+    min_value: 1
+    max_value: 60
+    step: 1
+    initial_value: 10
+    optimistic: true
+
+  - platform: template
+    name: "Fan Off Time (s)"
+    id: fan_off_time
+    min_value: 1
+    max_value: 300
+    step: 1
+    initial_value: 110
+    optimistic: true
+
+deep_sleep:
+  id: deep_sleep_cfg
+  wakeup_pin:
+    number: GPIO14
+    allow_other_uses: True
+    mode:
+      input: True
+      pulldown: True
+  wakeup_pin_mode: KEEP_AWAKE
+
+script:
+  - id: vaporiser_cycle
+    mode: single
+    then:
+      - if:
+          condition:
+            fan.is_on: vaporiser
+          then:
+            - fan.turn_off: vaporiser
+      - while:
+          condition: 
+            binary_sensor.is_on: presence_window
+          then:
+            - if:
+                condition:
+                  switch.is_on: enable_vapo
+                then:
+                  - fan.turn_on: vaporiser
+                  - delay: !lambda "return (int)id(fan_on_time).state * 1000;"
+                  - fan.turn_off: vaporiser
+                  - delay: !lambda "return (int)id(fan_off_time).state * 1000;"
+                else:
+                  - delay: !lambda "return (int)id(fan_on_time).state * 1000;"
+      - if:
+          condition:
+            fan.is_on: vaporiser
+          then:
+            - fan.turn_off: vaporiser
+
+  - id: goto_sleep
+    mode: single
+    then:
+      - script.stop: vaporiser_cycle
+      - fan.turn_off: vaporiser
+      - deep_sleep.enter: deep_sleep_cfg

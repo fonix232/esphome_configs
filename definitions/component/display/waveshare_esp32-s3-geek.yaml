@@ -1,9 +1,23 @@
 ---
 packages:
+  # display_base: !include
+  #   file: base/ili9xxx.yaml
+  #   vars:
+  #     display_model: st7789v
+  #     display_dc_pin: GPIO8
+  #     display_reset_pin: GPIO9
+  #     display_cs_pin: GPIO10
+  #     display_mosi_pin: GPIO11
+  #     display_clk_pin: GPIO12
+  #     display_invert_colors: True
+  #     display_dimensions_height: 135
+  #     display_dimensions_width: 240
+  #     display_dimensions_offset_height: 52
+  #     display_dimensions_offset_width: 40
   display_base: !include
-    file: base/ili9xxx.yaml
+    file: base/mipi_spi.yaml
     vars:
-      display_model: st7789v
+      display_model: ST7789V
       display_dc_pin: GPIO8
       display_reset_pin: GPIO9
       display_cs_pin: GPIO10
@@ -33,6 +47,7 @@ display:
     transform:
       swap_xy: True
       mirror_y: True
+      mirror_x: False
 
 globals:
   - id: display_rotated
@@ -40,29 +55,101 @@ globals:
     restore_value: yes
     initial_value: 'false'
 
-switch:
-  - platform: template
-    name: "Display Rotation"
-    id: display_rotation_switch
-    icon: mdi:screen-rotation
-    restore_mode: RESTORE_DEFAULT_OFF
-    lambda: |-
-      return id(display_rotated);
-    turn_on_action:
-      then:
-        - lambda: |-
-            auto display = id(main_display);
-            display->set_swap_xy(true);
-            display->set_mirror_y(false);
-            display->set_mirror_x(true);
-            id(display_rotated) = true;
-            display->setup();
-    turn_off_action:
-      then:
-        - lambda: |-
-            auto display = id(main_display);
-            display->set_swap_xy(true);
-            display->set_mirror_y(true);
-            display->set_mirror_x(false);
-            id(display_rotated) = false;
-            display->setup();
+# switch:
+#   - platform: template
+#     name: "Display Swap XY"
+#     id: display_swap_xy_switch
+#     icon: mdi:arrow-top-left-bottom-right
+#     restore_mode: RESTORE_DEFAULT_OFF
+#     lambda: |-
+#       return id(main_display)->get_swap_xy();
+#     turn_on_action:
+#       then:
+#         - lambda: |-
+#             id(main_display)->set_swap_xy(true);
+#     turn_off_action:
+#       then:
+#         - lambda: |-
+#             id(main_display)->set_swap_xy(false);
+#   - platform: template
+#     name: "Display Mirror X"
+#     id: display_mirror_x_switch
+#     icon: mdi:mirror-rectangle
+#     restore_mode: RESTORE_DEFAULT_OFF
+#     lambda: |-
+#       return id(main_display)->get_mirror_x();
+#     turn_on_action:
+#       then:
+#         - lambda: |-
+#             id(main_display)->set_mirror_x(true);
+#     turn_off_action:
+#       then:
+#         - lambda: |-
+#             id(main_display)->set_mirror_x(false);
+#   - platform: template
+#     name: "Display Mirror Y"
+#     id: display_mirror_y_switch
+#     icon: mdi:mirror-rectangle
+#     restore_mode: RESTORE_DEFAULT_OFF
+#     lambda: |-
+#       return id(main_display)->get_mirror_y();
+#     turn_on_action:
+#       then:
+#         - lambda: |-
+#             id(main_display)->set_mirror_y(true);
+#     turn_off_action:
+#       then:
+#         - lambda: |-
+#             id(main_display)->set_mirror_y(false);
+#   - platform: template
+#     name: "Display Rotation"
+#     id: display_rotation_switch
+#     icon: mdi:screen-rotation
+#     restore_mode: RESTORE_DEFAULT_OFF
+#     lambda: |-
+#       return id(display_rotated);
+#     turn_on_action:
+#       then:
+#         - lambda: |-
+#             auto backlight = id(back_light);
+#             auto brightness = backlight->remote_values.get_brightness();
+#             auto call_off = backlight->make_call();
+#             call_off.set_state(false);
+#             call_off.set_brightness(0);
+#             call_off.perform();
+
+#             auto display = id(main_display);
+#             display->set_swap_xy(true);
+#             display->set_mirror_y(false);
+#             display->set_mirror_x(true);
+#             id(display_rotated) = true;
+#             // display->setup();
+
+#             auto call = backlight->make_call();
+#             call.set_state(true);
+#             call.set_brightness(brightness);
+#             call.set_transition_length(2000);
+#             call.perform();
+#     turn_off_action:
+#       then:
+#         - lambda: |-
+#             auto backlight = id(back_light);
+#             auto brightness = backlight->remote_values.get_brightness();
+#             auto call_off = backlight->make_call();
+#             call_off.set_state(false);
+#             call_off.set_brightness(0);
+#             call_off.perform();
+
+#             auto display = id(main_display);
+#             display->set_swap_xy(true);
+#             display->set_mirror_y(true);
+#             display->set_mirror_x(false);
+#             id(display_rotated) = false;
+#             // display->setup();
+
+#             auto call = backlight->make_call();
+#             call.set_state(true);
+#             call.set_brightness(brightness);
+#             call.set_transition_length(2000);
+#             call.perform();
+  

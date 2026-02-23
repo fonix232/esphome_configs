@@ -1,0 +1,8 @@
+---
+sd_file_server:  #If need SD Card Support
+  id: file_server
+  url_prefix: file
+  root_path: "/"
+  enable_deletion: true
+  enable_download: true
+  enable_upload: true

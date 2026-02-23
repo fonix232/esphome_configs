@@ -1,0 +1,13 @@
+---
+packages:
+  rf_gateway: !include
+    file: rf_gateway.yaml
+    vars:
+      cc1101_gdo0_pin: GPIO1
+      cc1101_cs_pin: GPIO2
+      cc1101_clk_pin: GPIO10
+      cc1101_mosi_pin: GPIO4
+      cc1101_gdo1_pin: GPIO5
+      cc1101_gdo2_pin:  GPIO6
+  hallway_lights_rf: !include
+    file: ../../controlled_devices/rf/hallway_lights.yaml

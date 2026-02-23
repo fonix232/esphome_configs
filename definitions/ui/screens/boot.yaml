@@ -1,0 +1,49 @@
+---
+packages:
+  lcars_font_small: !include
+    file: ../fonts/lcars_font.yaml
+    vars:
+      font_size: 18
+      font_weight: 100
+      font_name: lcars_font_small
+  lcars_font_medium: !include
+    file: ../fonts/lcars_font.yaml
+    vars:
+      font_size: 24
+      font_weight: 100
+      font_name: lcars_font_medium
+  lcars_font_large: !include
+    file: ../fonts/lcars_font.yaml
+    vars:
+      font_size: 48
+      font_weight: 100
+      font_name: lcars_font_large
+
+image:
+  defaults:
+    type: rgb565
+  images:
+    - file: definitions/ui/images/delta2.png
+      type: grayscale
+      invert_alpha: true
+      id: boot_delta
+      resize: ${display_size}
+
+display:
+  - id: !extend main_display
+    pages:
+      - id: boot_page
+        lambda: |-
+          auto image = id(boot_delta);
+
+          it.image(
+            (it.get_width() - image->get_width()) / 2,
+            (it.get_height() - image->get_height()) / 2, 
+            image
+          );
+
+esphome:
+  on_boot: 
+    then:
+      - display.page.show: boot_page
+      - component.update: main_display

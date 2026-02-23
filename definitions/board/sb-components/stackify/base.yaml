@@ -1,0 +1,76 @@
+---
+# Board pinout
+#
+# |   SD CS   |         |  3V3   | △ | | ▽ | 5V PWR |         |          |
+# |  SD MOSI  | GPIO 1  | PIN 3  | ○ | | ▽ | 5V PWR |         |          |
+# |  SD SCK   | GPIO 2  | PIN 5  | ○ | | □ |  GND   |         |          |
+# |           | GPIO 42 | PIN 7  | ○ | | ○ | PIN 8  | GPIO 41 |  SD MISO |
+# |           |         |  GND   | □ | | ○ | PIN 10 | GPIO 39 |  IMU SCL |
+# |  IMU SDA  | GPIO 38 | PIN 11 | ○ | | ○ | PIN 12 | GPIO 47 |          |
+# |           | GPIO 21 | PIN 13 | ○ | | □ |  GND   |         |          |
+# |           | GPIO 13 | PIN 15 | ○ | | ○ | PIN 16 | GPIO 14 |          |
+# |           |         |  3V3   | △ | | ○ | PIN 18 | GPIO 12 |  CAM Y6  |
+# |  CAM Y5   | GPIO 10 | PIN 19 | ○ | | □ |  GND   |         |          |
+# |  CAM Y2   | GPIO 11 | PIN 21 | ○ | | ○ | PIN 22 | GPIO 46 |          |
+# |           | GPIO 3  | PIN 23 | ○ | | ○ | PIN 24 | GPIO 20 |          |
+# |           |         |  GND   | □ | | ○ | PIN 26 | GPIO 19 |          |
+# |           |         |   NC   | ✕ | | ✕ |   NC   |         |          |
+# |  CAM Y4   | GPIO 8  | PIN 29 | ○ | | □ |  GND   |         |          |
+# |  CAM Y7   | GPIO 18 | PIN 31 | ○ | | ○ | PIN 32 | GPIO 17 |  CAM Y8  |
+# |  CAM Y9   | GPIO 16 | PIN 33 | ○ | | □ |  GND   |         |          |
+# | CAM XCLK  | GPIO 15 | PIN 35 | ○ | | ○ | PIN 36 | GPIO 7  | CAM HREF |
+# | CAM VSYNC | GPIO 6  | PIN 37 | ○ | | ○ | PIN 38 | GPIO 5  | CAM SIOC |
+# |           |         |  GND   | □ | | ○ | PIN 40 | GPIO 4  | CAM SIOD |
+#
+#
+# Other pins:
+# GPIO 9  - CAM Y3
+# GPIO 13 - CAM PIXEL CLK
+
+packages:
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+  sdcard: !include 
+    file: ../../../component/sdcard/1bit.yaml
+    vars:
+      sd_clk: GPIO42
+      sd_cmd: GPIO2
+      sd_dat0: GPIO41
+  # sd_file_server: !include
+  #   file: ../../../component/sdcard/file_server.yaml
+  sd_sensors: !include
+    file: ../../../component/sdcard/sensors.yaml
+
+esp32:
+  board: esp32-s3-devkitm-1
+  flash_size: 16MB
+
+logger:
+  hardware_uart: UART0
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+# i2c:
+#   - id: i2c_bus_1
+#     sda: GPIO38
+#     scl: GPIO39
+
+# - id: i2c_bus_camera
+#   sda: GPIO4
+#   scl: GPIO5
+
+# esp32_camera:
+#   name: CAMERA
+#   external_clock:
+#     pin: GPIO15
+#     frequency: 20MHz
+#   i2c_id: i2c_bus_camera
+#   data_pins: [ GPIO16, GPIO17, GPIO18, GPIO12, GPIO10, GPIO8, GPIO9, GPIO11 ]
+#   vsync_pin: GPIO6
+#   href_pin: GPIO7
+#   pixel_clock_pin: GPIO13
+#   # reset_pin: GPIOXX
+#   resolution: 640x480
+#   jpeg_quality: 10

@@ -1,0 +1,11 @@
+---
+packages:
+  board: !include ../../board/espressif/esp_ir_tr_v1.1/arduino.yaml
+  ir_transmitter: !include
+    file: ../../component/infrared/transmitter.yaml
+    vars:
+      ir_transmitter_pin: GPIO4
+  ir_receiver: !include
+    file: ../../component/infrared/receiver.yaml
+    vars:
+      ir_receiver_pin: GPIO14

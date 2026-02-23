@@ -1,0 +1,12 @@
+---
+time:
+  - platform: pcf8563  #BM8563
+    id: rtc_time
+    address: 0x51
+    timezone: Europe/London
+    update_interval: never
+  - id: !extend homeassistant_time
+    on_time_sync:
+      then:
+        pcf8563.write_time:
+          id: rtc_time

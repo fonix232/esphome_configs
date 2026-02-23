@@ -1,9 +1,0 @@
----
-packages:
-  board: !include ../board/waveshare/s3-lcd-touch-4.3.espidf.yaml
-  bt_proxy: !include ../component/bluetooth/proxy_espidf.yaml
-#   ld2450: !include 
-#     file: ../component/sensor/ld2450.yaml
-#     vars:
-#       uart_tx: GPIO33
-#       uart_rx: GPIO34

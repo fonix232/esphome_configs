@@ -1,5 +1,4 @@
 ---
-
 packages:
   display_base: !include
     file: base/rpi_dpi_rgb.yaml

@@ -1,0 +1,10 @@
+---
+packages:
+  sd_base: !include base.yaml
+
+sd_mmc_card:
+  id: sdcard
+  mode_1bit: true
+  clk_pin: ${sd_clk}
+  cmd_pin: ${sd_cmd}
+  data0_pin: ${sd_dat0}

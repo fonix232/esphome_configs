@@ -1,20 +1,20 @@
 ---
 packages:
-  lcars: !include lcars_theme.yaml
+  lcars: !include themes/lcars_theme.yaml
   lcars_font_small: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 12
       font_weight: 100
       font_name: lcars_font_small
   lcars_font_medium: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 24
       font_weight: 100
       font_name: lcars_font_medium
   lcars_font_large: !include
-    file: lcars_font.yaml
+    file: fonts/lcars_font.yaml
     vars:
       font_size: 48
       font_weight: 100
@@ -22,20 +22,42 @@ packages:
 
 display:
   - id: !extend main_display
-    lambda: |-
-      it.rectangle(0,  0, it.get_width(), it.get_height(), id(lcars_gold));
-      it.rectangle(0, 20, it.get_width(), it.get_height(), id(lcars_gold));   // header bar
+    pages:
+      - id: page_home
+        lambda: |-
+          auto width = it.get_width();
+          auto height = it.get_height();
+          it.rectangle(0,  0, width, height, id(lcars_gold));
+          it.rectangle(0, 20, width, height, id(lcars_gold));   // header bar
 
-      it.print(5, 10, id(lcars_font_small), id(lcars_text), TextAlign::CENTER_LEFT,  App.get_name().c_str());
+          it.print(5, 10, id(lcars_font_small), id(lcars_text), TextAlign::CENTER_LEFT,  App.get_name().c_str());
 
-      if (id(system_status).state) {
-        it.print(218, 10, id(lcars_font_small), id(lcars_green), TextAlign::CENTER_RIGHT, "Online");
-        it.filled_circle(230, 10, 4.5, id(lcars_green));
-      }
-      else {
-        it.print(218, 10, id(lcars_font_small), id(lcars_mars), TextAlign::CENTER_RIGHT, "Offline");
-        it.filled_circle(230, 10, 4.5, id(lcars_mars));
-      }
+          if (id(system_status).state) {
+            it.print(width - 22, 10, id(lcars_font_small), id(lcars_green), TextAlign::CENTER_RIGHT, "Online");
+            it.filled_circle(width - 10, 10, 4.5, id(lcars_green));
+          }
+          else {
+            it.print(width - 22, 10, id(lcars_font_small), id(lcars_mars), TextAlign::CENTER_RIGHT, "Offline");
+            it.filled_circle(width - 10, 10, 4.5, id(lcars_mars));
+          }
 
-      it.strftime((240 / 2), (140 / 3) * 1 + 5, id(lcars_font_medium), id(lcars_text), TextAlign::CENTER, "%Y-%m-%d", id(esptime).now());
-      it.strftime((240 / 2), (140 / 3) * 2 + 5, id(lcars_font_large), id(lcars_text), TextAlign::CENTER, "%H:%M:%S", id(esptime).now());
+          it.strftime((width / 2), (height / 3) * 1 + 5, id(lcars_font_medium), id(lcars_text), TextAlign::CENTER, "%Y-%m-%d", id(homeassistant_time).now());
+          it.strftime((width / 2), (height / 3) * 2 + 5, id(lcars_font_large), id(lcars_text), TextAlign::CENTER, "%H:%M:%S", id(homeassistant_time).now());
+      - id: page_update
+        lambda: |-
+          auto width = it.get_width();
+          auto height = it.get_height();
+          it.rectangle(0,  0, width, height, id(lcars_gold));
+          it.rectangle(0, 20, width, height, id(lcars_gold));
+          it.filled_rectangle(0, 0, width, 20, id(lcars_gold));
+
+          it.print((width / 2), (height / 3) * 2 + 5, id(lcars_font_large), id(lcars_midnight), TextAlign::CENTER, "UPDATING...");
+
+ota:
+  - id: !extend ota_esphome
+    on_begin: 
+      then:
+        - display.page.show: page_update
+        - component.update: main_display
+        - lambda: |-
+            ESP_LOGD("display", "Page changed to UPDATE");

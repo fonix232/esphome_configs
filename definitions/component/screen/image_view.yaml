@@ -1,0 +1,51 @@
+---
+http_request:
+
+online_image:
+  - id: image_data
+    url: ${image_url}
+    format: ${image_format}
+    type: ${image_type}
+    resize: ${image_size}
+    update_interval: 6h
+    on_download_finished:
+      then:
+        - display.page.show: image_page
+        - component.update: main_display
+
+button:
+  - platform: template
+    name: "Refresh image"
+    on_press:
+      then:
+        - component.update: image_data
+
+text:
+  - platform: template
+    name: "Image URL"
+    restore_value: True
+    mode: text
+    initial_value: ${image_url}
+    set_action:
+      then:
+        - online_image.set_url:
+            id: image_data
+            url: !lambda return x;
+        - component.update: image_data
+    on_value:
+      then:
+        - online_image.set_url:
+            id: image_data
+            url: !lambda return x;
+        - component.update: image_data
+
+display:
+  - id: !extend main_display
+    pages:
+      - id: image_page
+        lambda: |-
+          it.image(0, 0, id(image_data));
+      - id: image_debug
+        lambda: |-
+          it.image(0, 0, id(image_data));
+          // TODO: Draw debug info over image

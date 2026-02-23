@@ -1,0 +1,50 @@
+---
+packages:
+  mixer_speaker: !include common/mixer_speaker.yaml
+  mediaplayer: !include common/mediaplayer_assistant.yaml
+
+i2s_audio:
+  - id: i2s_audio_bus
+    i2s_lrclk_pin: GPIO12
+    i2s_bclk_pin: GPIO11
+    i2s_mclk_pin: GPIO10
+
+audio_dac:
+  - id: dac_0
+    platform: es8311
+    i2c_id: i2c_0
+    address: 0x18
+    bits_per_sample: 16bit
+    sample_rate: 16000
+    mic_gain: 24dB
+    use_microphone: true
+
+audio_adc:
+  - id: adc_0
+    platform: es7243e
+    i2c_id: i2c_0
+    address: 0x14
+    mic_gain: 27dB
+
+microphone:
+  - id: mic_0
+    platform: i2s_audio
+    adc_type: external
+    i2s_audio_id: i2s_audio_bus
+    i2s_din_pin: GPIO15
+    pdm: true
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    correct_dc_offset: true
+
+speaker:
+  - id: speaker_0
+    platform: i2s_audio
+    dac_type: external
+    i2s_audio_id: i2s_audio_bus
+    i2s_dout_pin: GPIO16
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    channel: stereo
+    audio_dac: dac_0
+    buffer_duration: 60ms

@@ -1,0 +1,56 @@
+---
+packages:
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+
+esp32:
+  flash_size: 16MB
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+sensor:
+  - platform: adc
+    icon: mdi:battery
+    id: battery_voltage
+    pin: GPIO02
+    name: "Battery Voltage"
+    update_interval: 1s
+    entity_category: diagnostic
+    state_class: "measurement"
+    device_class: "voltage"
+    attenuation: 12db
+    filters:
+      - multiply: 2.0
+      - delta: 0.06
+
+  - platform: template
+    name: Battery level
+    id: battery_level
+    icon: mdi:battery
+    unit_of_measurement: "%"
+    entity_category: diagnostic
+    state_class: "measurement"
+    device_class: "battery"
+    lambda: !lambda return id(battery_voltage).state;
+    update_interval: 5s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 5
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 3.0 -> -1
+            - 3.2 -> 0
+            - 4.22 -> 100
+      - delta: 1.0
+
+light:
+  - platform: status_led
+    name: "Status LED"
+    internal: True
+    pin: 
+      number: GPIO17
+      inverted: true

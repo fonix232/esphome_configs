@@ -1,5 +1,5 @@
 ---
 packages:
-  mcu: !include ../../mcu/tuya/wb3s.yaml
+  mcu: !include ../../mcu/tuya/wb3s/base.yaml
   base: !include ../../base.yaml
   extended: !include ../../extended.yaml

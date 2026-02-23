@@ -1,0 +1,143 @@
+---
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: led_internal
+    internal: true
+    rgb_order: GRB
+    pin: GPIO1
+    num_leds: 1
+    rmt_symbols: 192
+    chipset: ws2812
+    default_transition_length: 0s
+    effects:
+      - addressable_lambda:
+          name: "Fast Pulse"
+          update_interval: 10ms
+          lambda: |-
+            static float fraction = 0.0;
+            static float step = 0.05;
+            static bool increasing = true;
+
+            auto values = id(led_internal)->current_values;
+            Color color(values.get_red() * 255, values.get_green() * 255, values.get_blue() * 255);
+            it[0].set_rgb(color.red * fraction, 
+                             color.green * fraction, 
+                             color.blue * fraction);
+            
+            fraction += (step * (increasing ? 1 : -1));
+            if (fraction > 1.0) {
+              fraction = 1.0;
+              increasing = !increasing;
+            } else if (fraction < 0.0) {
+              fraction = 0.0;
+              increasing = !increasing;
+            }
+
+      - addressable_lambda:
+          name: "Slow Pulse"
+          update_interval: 30ms
+          lambda: |-
+            static float fraction = 0.0;
+            static float step = 0.05;
+            static bool increasing = true;
+
+            auto values = id(led_internal)->current_values;
+            Color color(values.get_red() * 255, values.get_green() * 255, values.get_blue() * 255);
+            it[0].set_rgb(color.red * fraction, 
+                             color.green * fraction, 
+                             color.blue * fraction);
+            
+            fraction += (step * (increasing ? 1 : -1));
+            if (fraction > 1.0) {
+              fraction = 1.0;
+              increasing = !increasing;
+            } else if (fraction < 0.0) {
+              fraction = 0.0;
+              increasing = !increasing;
+            }
+  # User facing LED.
+  # Exposed to be used by the user.
+  - platform: partition
+    id: led_respeaker_onboard
+    name: LED Respeaker onboard
+    entity_category: config
+    icon: "mdi:circle-outline"
+    default_transition_length: 0ms
+    restore_mode: RESTORE_DEFAULT_OFF
+    # on_turn_off:
+    #   - script.execute: control_leds
+    initial_state:
+      color_mode: rgb
+      brightness: 100%
+      red: 9.4%
+      green: 73.3%
+      blue: 94.9%
+    segments:
+      - id: led_internal
+        from: 0
+        to: 0
+    effects:
+      - addressable_lambda:
+          name: "Fast Pulse"
+          update_interval: 10ms
+          lambda: |-
+            static float fraction = 0.0;
+            static float step = 0.05;
+            static bool increasing = true;
+
+            auto values = id(led_respeaker_onboard)->current_values;
+            Color color(values.get_red() * 255, values.get_green() * 255, values.get_blue() * 255);
+            it[0].set_rgb(color.red * fraction, 
+                             color.green * fraction, 
+                             color.blue * fraction);
+            
+            fraction += (step * (increasing ? 1 : -1));
+            if (fraction > 1.0) {
+              fraction = 1.0;
+              increasing = !increasing;
+            } else if (fraction < 0.0) {
+              fraction = 0.0;
+              increasing = !increasing;
+            }
+
+      - addressable_lambda:
+          name: "Slow Pulse"
+          update_interval: 30ms
+          lambda: |-
+            static float fraction = 0.0;
+            static float step = 0.05;
+            static bool increasing = true;
+
+            auto values = id(led_respeaker_onboard)->current_values;
+            Color color(values.get_red() * 255, values.get_green() * 255, values.get_blue() * 255);
+            it[0].set_rgb(color.red * fraction, 
+                             color.green * fraction, 
+                             color.blue * fraction);
+            
+            fraction += (step * (increasing ? 1 : -1));
+            if (fraction > 1.0) {
+              fraction = 1.0;
+              increasing = !increasing;
+            } else if (fraction < 0.0) {
+              fraction = 0.0;
+              increasing = !increasing;
+            }
+
+binary_sensor:
+  # User Button. Used for many things (See on_multi_click)
+  - platform: gpio
+    id: user_button
+    pin:
+      number: GPIO3 # D2
+      inverted: false
+      ignore_strapping_warning: true
+    name: "User button"
+
+  - platform: gpio
+    id: mute_button
+    pin:
+      number: GPIO4 # D3
+      inverted: false
+    name: "Mute button"
+

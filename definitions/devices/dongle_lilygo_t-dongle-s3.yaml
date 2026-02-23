@@ -1,5 +1,0 @@
----
-packages:
-  board: !include ../board/lilygo/t-dongle_s3.yaml
-  bt_proxy: !include ../component/bluetooth/proxy_espidf.yaml
-  ui: !include ../ui/ui_160_80.yaml

@@ -1,0 +1,166 @@
+---
+packages:
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+  sdcard: !include 
+    file: ../../../component/sdcard/1bit_4pin.yaml
+    vars:
+      sd_clk: GPIO39
+      sd_cmd: GPIO38
+      sd_dat0: GPIO40
+      sd_cs: GPIO47
+  fileserver: !include ../../../component/sdcard/file_server.yaml
+  sd_sensors: !include ../../../component/sdcard/sensors.yaml
+  display: !include
+    file: ../../../component/display/m5stack_papers3.yaml
+  rtc: !include
+    file: ../../../component/time/pcf8563.yaml
+
+logger:
+  level: DEBUG
+
+esp32:
+  board: esp32-s3-devkitm-1
+  flash_size: 16MB
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2c:
+  sda: GPIO41
+  scl: GPIO42
+  scan: true
+  id: bus_internal
+  frequency: 200kHz
+
+touchscreen:
+  platform: gt911
+  id: main_touch
+  interrupt_pin: GPIO48
+  transform:
+    mirror_x: false
+    mirror_y: false
+    swap_xy: false
+  on_touch:
+    - lambda: |-
+        ESP_LOGD("gt911_touch", "x=%d, y=%d, x_raw=%d, y_raw=%0d",
+            touch.x,
+            touch.y,
+            touch.x_raw,
+            touch.y_raw
+            );
+
+output:
+  - platform: ledc
+    id: rtttl_pin
+    pin: 21
+  - platform: ledc
+    id: status_led_pin
+    pin: 0
+    inverted: True
+
+light:
+  - platform: monochromatic
+    id: statled
+    name: "Status LED"
+    output: status_led_pin
+    restore_mode: ALWAYS_OFF
+    internal: True
+    disabled_by_default: True
+
+rtttl:
+  output: rtttl_pin
+  id: rtttl_buzz
+  gain: 60%
+
+sensor:
+
+  - platform: internal_temperature
+    name: "Chip Temp"
+
+  - platform: bmi270
+    address: 0x68
+    accel_x:
+      name: "BMI270 Accel X"
+    accel_y:
+      name: "BMI270 Accel Y"
+    accel_z:
+      name: "BMI270 Accel Z"
+    gyro_x:
+      name: "BMI270 Gyro X"
+    gyro_y:
+      name: "BMI270 Gyro Y"
+    gyro_z:
+      name: "BMI270 Gyro Z"
+    temperature:
+      name: "BMI270 Temperature"
+    power_save_mode: NORMAL # OR NORMAL
+    update_interval: 5s
+    # Add new configuration options specific to BMI270 if needed
+    # For example, accelerometer and gyroscope range selection:
+    # accel_range: '8g' # Options: '2g', '4g', '8g', '16g' [cite: 5]
+    # gyro_range: '2000dps' # Options: '125dps', '250dps', '500dps', '1000dps', '2000dps' [cite: 5]
+
+
+  - platform: adc
+    id: battery_voltage_raw
+    pin: GPIO3
+    name: "Battery Voltage (raw)"
+    update_interval: 1s
+    attenuation: 12db
+    filters:
+      - delta: 0.01
+
+  - platform: template
+    id: battery_voltage
+    name: "Battery Voltage"
+    lambda: !lambda return id(battery_voltage_raw).state;
+    filters:
+      - multiply: 2.0
+
+  - platform: template
+    id: battery_level
+    name: "Battery level"
+    lambda: !lambda return id(battery_voltage).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 5
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 3.0 -> -1
+            - 3.2 -> 0
+            - 4.22 -> 100
+      - delta: 1.0
+
+  - platform: adc
+    id: usb_det_raw
+    pin: GPIO5
+    name: "USB Detection (raw)"
+    update_interval: 1s
+    attenuation: 12db
+    filters:
+      - delta: 0.01
+
+  - platform: template
+    id: usb_det
+    name: "USB Detection"
+    lambda: !lambda return id(usb_det_raw).state;
+    filters:
+      - multiply: 17.6
+
+binary_sensor:
+
+  - platform: gpio
+    pin:
+      number: 4
+      inverted: True
+    name: "Charge Status"
+    device_class: battery_charging
+
+  - platform: template
+    lambda: return id(usb_det_raw).state > 0.1f;
+    name: "USB Status"
+    device_class: plug

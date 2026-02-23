@@ -1,0 +1,5 @@
+---
+packages:
+  base: !include ../../../base.yaml
+  # extended: !include ../../../extended.yaml
+  

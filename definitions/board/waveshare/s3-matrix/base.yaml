@@ -1,0 +1,55 @@
+---
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  flash_size: 4MB
+
+psram:
+  mode: quad
+  speed: 40MHz
+
+packages:
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+
+i2c:
+  sda: GPIO11
+  scl: GPIO12
+
+light:
+  - platform: esp32_rmt_led_strip
+    rgb_order: RGB
+    pin: GPIO14
+    #rmt_channel: 0
+    chipset: ws2811
+    id: pixel_matrix
+    num_leds: 64
+    color_correct: [40%, 40%, 40%]
+    effects: 
+      - addressable_scan:
+      - addressable_twinkle:
+
+display:
+  - platform: addressable_light
+    id: pixel_display
+    addressable_light_id: pixel_matrix
+    width: 8
+    height: 8
+    pixel_mapper: |-
+      if (x % 2 == 0) {
+        return (x * 8) + y;
+      }
+      return (x * 8) + (7 - y);
+    rotation: 180°
+    update_interval: 1000ms
+    auto_clear_enabled: true
+    # lambda: |-
+    #       Color red = Color(0x5F0000);
+    #       Color green = Color(0x005F00);
+    #       Color blue = Color(0x00005F);
+    #       it.rectangle(0, 0, 8, 8, red);
+    #       it.rectangle(1, 1, 6, 6, green);
+    #       it.rectangle(2, 2, 4, 4, blue);
+    #       it.rectangle(3, 3, 2, 2, red);

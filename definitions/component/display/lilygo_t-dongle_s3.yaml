@@ -12,11 +12,13 @@ packages:
       display_dimensions_width: 80
       display_dimensions_offset_height: 1
       display_dimensions_offset_width: 26
-  display_backlight: !include
-    file: base/pwm_backlight.yaml
+  display_backlight_ledc: !include
+    file: base/pwm_backlight_ledc.yaml
     vars:
       display_backlight_pin: GPIO38
       display_backlight_pin_inverted: True
+  display_backlight: !include
+    file: base/pwm_backlight.yaml
 
 spi:
   mosi_pin: 
