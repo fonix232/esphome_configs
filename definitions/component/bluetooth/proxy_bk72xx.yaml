@@ -1,0 +1,8 @@
+---
+# BLE proxy for BK72xx (Beken) — advertisement-only.
+# The chip has no GATT client, so `active` / `cache_services` are not
+# allowed here. Default 30ms/100ms scan window balances BLE against
+# WiFi on the single-core SoC.
+bk72xx_ble_tracker:
+
+bluetooth_proxy:

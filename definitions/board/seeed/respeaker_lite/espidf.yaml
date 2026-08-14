@@ -1,4 +1,0 @@
----
-packages:
-  board_base: !include base.yaml
-  mcu: !include ../xiao_esp32s3/espidf.yaml

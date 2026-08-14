@@ -1,6 +1,8 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
 packages:
-  board: !include ../../board/waveshare/s3-geek/espidf.yaml
-  display: !include ../../component/display/waveshare_esp32-s3-geek.yaml
-  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
+  board: !include ../../board/waveshare/s3-geek/base.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml
   ui: !include ../../ui/ui_240_135.yaml

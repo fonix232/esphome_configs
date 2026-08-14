@@ -1,0 +1,80 @@
+---
+packages:
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+  display: !include ../../../component/display/m5stack_atoms3r.yaml
+
+external_components:
+  - source: github://m5stack/esphome-yaml/components
+    components: [lp5562]
+    refresh: 1d
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2c:
+  - sda: GPIO38
+    scl: GPIO39
+    frequency: 400kHz
+    scan: true
+    id: bus_external
+  # On-board I2C bus (LP5562 RGB driver, BMI270 IMU, BMM150 magnetometer)
+  - sda:
+      number: GPIO45
+      ignore_strapping_warning: true
+    scl:
+      number: GPIO0
+      ignore_strapping_warning: true
+    scan: true
+    id: bus_internal
+
+spi:
+  mosi_pin: GPIO21
+  clk_pin: GPIO15
+
+binary_sensor:
+  - platform: gpio
+    id: atoms3_button
+    name: "Main Button"
+    pin:
+      number: GPIO41
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+
+remote_transmitter:
+  pin: GPIO47
+  carrier_duty_percent: 50%
+  non_blocking: true
+
+sensor:
+  - platform: internal_temperature
+    name: "Chip Temp"
+
+# LP5562 RGB LED driver (AtomS3R on-board, controls LCD backlight)
+lp5562:
+  id: lp5562_led
+  i2c_id: bus_internal
+  use_internal_clk: true
+  white_current: 17.5
+
+output:
+  - platform: lp5562
+    id: lp5562_white_channel
+    lp5562_id: lp5562_led
+    channel: white
+
+light:
+  - platform: monochromatic
+    name: "LCD Backlight"
+    output: lp5562_white_channel
+    icon: "mdi:television"
+    restore_mode: RESTORE_DEFAULT_ON

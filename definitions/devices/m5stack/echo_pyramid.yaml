@@ -1,0 +1,177 @@
+---
+# M5Stack Echo Pyramid (Voice Pyramid A167)
+# STM32G030 co-processor: 4-button touch, 2 swipe groups, 28× WS2812 LEDs, USB-C voltage
+# Audio: ES8311 DAC, ES7210 ADC, AW87559 amp, Si5351 MCLK
+
+packages:
+  audio: !include ../../component/audio/m5stack_echo_pyramid.yaml
+
+# M5Stack peripheral components (audio ICs — aw87559 amp, si5351 clock)
+external_components:
+  - source: github://m5stack/esphome-yaml/components
+    components: [aw87559, si5351]
+    refresh: 1d
+
+# STM32 co-processor hub (touch + LEDs + USB voltage)
+m5stack_voice_pyramid:
+  id: pyramid_hub
+  i2c_id: bus_external
+
+# STM32 firmware version + USB voltage telemetry
+text_sensor:
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    firmware_version:
+      name: "STM32 Firmware"
+
+sensor:
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    usb_voltage:
+      name: "USB Voltage"
+
+# STM32 management buttons
+button:
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    speaker_reset:
+      name: "Speaker Reset"
+    reboot_coprocessor:
+      name: "Reboot Co-Processor"
+
+# Capacitive touch inputs
+binary_sensor:
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: button
+    button_index: 0
+    name: "Touch 1"
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: button
+    button_index: 1
+    name: "Touch 2"
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: button
+    button_index: 2
+    name: "Touch 3"
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: button
+    button_index: 3
+    name: "Touch 4"
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: swipe_up
+    group_index: 0
+    name: "Swipe Up A"
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: swipe_up
+    group_index: 1
+    name: "Swipe Up B"
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: swipe_down
+    group_index: 0
+    name: "Swipe Down A"
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    type: swipe_down
+    group_index: 1
+    name: "Swipe Down B"
+
+# LED strips — 4 individual faces (strip_index 0–3) + 1 mirror virtual strip (strip_index 4)
+# 7 LEDs per face; CH2 halves are hardware-reversed (handled in protocol layer)
+light:
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    id: pyramid_face1
+    name: "Pyramid Face 1"
+    strip_index: 0
+    restore_mode: RESTORE_DEFAULT_ON
+    effects: &pyramid_effects
+      - addressable_rainbow:
+          name: "Rainbow"
+          speed: 10
+          width: 7
+      - addressable_color_wipe:
+          name: "Color Wipe"
+          colors:
+            - red: 100%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 100%
+              blue: 0%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 100%
+              num_leds: 1
+          add_led_interval: 80ms
+          reverse: false
+      - addressable_scan:
+          name: "Scan"
+          move_interval: 60ms
+          scan_width: 2
+      - addressable_twinkle:
+          name: "Twinkle"
+          twinkle_probability: 5%
+          progress_interval: 4ms
+      - addressable_fireworks:
+          name: "Fireworks"
+          spark_probability: 10%
+          use_random_color: true
+          fade_out_rate: 100
+      - pulse:
+          name: "Pulse"
+          transition_length: 1.5s
+          update_interval: 1.5s
+      - addressable_lambda:
+          name: "Breathe"
+          update_interval: 16ms
+          lambda: |-
+            static uint16_t phase = 0;
+            phase += 4;
+            if (phase >= 720) phase = 0;
+            uint8_t bright;
+            if (phase < 360)
+              bright = (phase * 255) / 360;
+            else
+              bright = ((720 - phase) * 255) / 360;
+            auto color = current_color;
+            color.r = ((uint16_t)color.r * bright) >> 8;
+            color.g = ((uint16_t)color.g * bright) >> 8;
+            color.b = ((uint16_t)color.b * bright) >> 8;
+            it.all() = color;
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    id: pyramid_face2
+    name: "Pyramid Face 2"
+    strip_index: 1
+    restore_mode: RESTORE_DEFAULT_ON
+    effects: *pyramid_effects
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    id: pyramid_face3
+    name: "Pyramid Face 3"
+    strip_index: 2
+    restore_mode: RESTORE_DEFAULT_ON
+    effects: *pyramid_effects
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    id: pyramid_face4
+    name: "Pyramid Face 4"
+    strip_index: 3
+    restore_mode: RESTORE_DEFAULT_ON
+    effects: *pyramid_effects
+  - platform: m5stack_voice_pyramid
+    voice_pyramid_id: pyramid_hub
+    id: pyramid_all
+    name: "Pyramid All"
+    strip_index: 4
+    restore_mode: RESTORE_DEFAULT_OFF
+    effects: *pyramid_effects

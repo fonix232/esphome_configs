@@ -1,6 +1,9 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
 packages:
-  board: !include ../../board/m5stack/atom_echo.espidf.yaml
-  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
+  board: !include ../../board/m5stack/atom_echo/base.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml
   audio: !include ../../component/audio/m5stack_atom_echo.yaml
   voice: !include ../../component/audio/voice.yaml

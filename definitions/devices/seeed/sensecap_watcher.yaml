@@ -1,6 +1,10 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
 packages:
-  board: !include ../../board/seeed/sensecap_watcher/espidf.yaml
+  board: !include ../../board/seeed/sensecap_watcher/base.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml
   audio: !include ../../component/audio/seeed_sensecap_watcher.yaml
   wakeword: !include ../../component/audio/wakeword.yaml
   voice: !include ../../component/audio/voice.yaml

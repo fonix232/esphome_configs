@@ -46,43 +46,7 @@ external_components:
     components: 
       - respeaker_lite
     refresh: 0s
-  - source:
-      # https://github.com/esphome/esphome/pull/12253
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 7f34908569650e5a8b8c83e6bf89fea561218880
-    components: [mixer]
-  - source:
-      # https://github.com/esphome/esphome/pull/12254
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 6006b896a691ad38d8045ac67564c168973d1a1d
-    components: [resampler]
-  - source:
-      # https://github.com/esphome/esphome/pull/12256
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 9148832ea4e54907bad71a24d4ced1ce6c862433
-    components: [audio]
-  - source:
-      # https://github.com/esphome/esphome/pull/12258
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: bff22983a390352360796f8e1363127e0cd1f898
-    components: [media_player]
-  - source:
-      # https://github.com/esphome/esphome/pull/12284
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: a6c0a861a014e64c67d46115eba8e5370777b80a
-    components: [mdns, sendspin]
-  - source:
-      # https://github.com/esphome/esphome/pull/12429
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 928204066ce0082404573ea1c6a0b58aeebbd7c6
-    refresh: 0s
-    components: [file, http_request, media_source, speaker_source]
+  # sendspin, media_source, audio_file, audio_http, speaker_source merged into ESPHome core in 2026.3.0-2026.5.0
 
 audio_dac:
   - platform: aic3204
@@ -142,43 +106,44 @@ speaker:
 sendspin:
   id: sendspin_hub
   task_stack_in_psram: true
-  kalman_process_error: 0.01
 
-http_request:
+audio_file:
+  - id: center_button_press_sound
+    file: ${center_button_press_sound_file}
+  - id: center_button_double_press_sound
+    file: ${center_button_double_press_sound_file}
+  - id: center_button_triple_press_sound
+    file: ${center_button_triple_press_sound_file}
+  - id: center_button_long_press_sound
+    file: ${center_button_long_press_sound_file}
+  - id: factory_reset_initiated_sound
+    file: ${factory_reset_initiated_sound_file}
+  - id: factory_reset_cancelled_sound
+    file: ${factory_reset_cancelled_sound_file}
+  - id: factory_reset_confirmed_sound
+    file: ${factory_reset_confirmed_sound_file}
+  - id: mute_switch_on_sound
+    file: ${mute_switch_on_sound_file}
+  - id: mute_switch_off_sound
+    file: ${mute_switch_off_sound_file}
+  - id: timer_finished_sound
+    file: ${timer_finished_sound_file}
+  - id: wake_word_triggered_sound
+    file: ${wake_word_triggered_sound_file}
+  - id: error_cloud_expired
+    file: ${error_cloud_expired_sound_file}
 
 media_source:
   - platform: sendspin
     id: sendspin_source
-  - platform: http_request
+  - platform: audio_http
     id: http_source
     buffer_size: 500000
-  - platform: file
+  - platform: audio_http
+    id: http_announcement_source
+    buffer_size: 250000
+  - platform: audio_file
     id: file_source
-    files:
-      - id: center_button_press_sound
-        file: ${center_button_press_sound_file}
-      - id: center_button_double_press_sound
-        file: ${center_button_double_press_sound_file}
-      - id: center_button_triple_press_sound
-        file: ${center_button_triple_press_sound_file}
-      - id: center_button_long_press_sound
-        file: ${center_button_long_press_sound_file}
-      - id: factory_reset_initiated_sound
-        file: ${factory_reset_initiated_sound_file}
-      - id: factory_reset_cancelled_sound
-        file: ${factory_reset_cancelled_sound_file}
-      - id: factory_reset_confirmed_sound
-        file: ${factory_reset_confirmed_sound_file}
-      - id: mute_switch_on_sound
-        file: ${mute_switch_on_sound_file}
-      - id: mute_switch_off_sound
-        file: ${mute_switch_off_sound_file}
-      - id: timer_finished_sound
-        file: ${timer_finished_sound_file}
-      - id: wake_word_triggered_sound
-        file: ${wake_word_triggered_sound_file}
-      - id: error_cloud_expired
-        file: ${error_cloud_expired_sound_file}
 
 media_player:
   - platform: sendspin
@@ -187,40 +152,38 @@ media_player:
   - platform: speaker_source
     id: external_media_player
     name: Media Player
-    announcement_speaker: announcement_resampling_speaker
-    media_speaker: media_resampling_speaker
     announcement_pipeline:
+      speaker: announcement_spk_resampling_input
       format: FLAC     # FLAC is the least processor intensive codec
       num_channels: 1  # Stereo audio is unnecessary for announcements
       sample_rate: 48000
+      sources:
+        - file_source
+        - http_announcement_source
     media_pipeline:
+      speaker: media_spk_resampling_input
       format: FLAC     # FLAC is the least processor intensive codec
       num_channels: 2
       sample_rate: 48000
+      sources:
+        - http_source
+        - sendspin_source
     volume_increment: 0.05
     volume_min: 0.4
     volume_max: 0.85
-    sources:
-      - file_source
-      - http_source
-      - sendspin_source
     on_announcement:
       - mixer_speaker.apply_ducking:
-          id: media_mixing_input
+          id: media_spk_mixer_input
           decibel_reduction: 20
           duration: 0.0s
     on_state:
       if:
         condition:
-          and:
-            - switch.is_off: timer_ringing
-            - not:
-                voice_assistant.is_running:
-            - not:
-                media_player.is_announcing: external_media_player
+          not:
+            media_player.is_announcing: external_media_player
         then:
           - mixer_speaker.apply_ducking:
-              id: media_mixing_input
+              id: media_spk_mixer_input
               decibel_reduction: 0
               duration: 1.0s
 

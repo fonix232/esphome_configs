@@ -18,3 +18,5 @@ definitions/external_component/*
 !fonts
 !fonts/FontAwesome5-Solid+Brands+Regular.woff
 !fonts/materialdesignicons-webfont.ttf
+.smbdelete*
+**/.smbdelete*

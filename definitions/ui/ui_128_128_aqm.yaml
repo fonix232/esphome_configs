@@ -2,7 +2,7 @@
 packages:
   lcars: !include themes/lcars_theme.yaml
   battery_icon: !include 
-    file: icons/mdi_battery.yaml
+    file: icon_fonts/mdi_battery.yaml
     vars:
       battery_font_size: 14
       battery_font_name: 
@@ -31,7 +31,9 @@ packages:
       font_name: icons_font_small
 
 lvgl:
-  disp_bg_color: lcars_background
+  rotation: 90
+  bottom_layer:
+    bg_color: lcars_background
   default_font: lcars_font_small
   border_width: 0
   outline_width: 0

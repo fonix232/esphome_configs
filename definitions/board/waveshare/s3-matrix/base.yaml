@@ -11,6 +11,7 @@ psram:
   speed: 40MHz
 
 packages:
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
   base: !include ../../../base.yaml
   extended: !include ../../../extended.yaml
 
@@ -53,3 +54,41 @@ display:
     #       it.rectangle(1, 1, 6, 6, green);
     #       it.rectangle(2, 2, 4, 4, blue);
     #       it.rectangle(3, 3, 2, 2, red);
+
+# ### Onboard QMI8658 IMU - DISABLED ###
+# Arduino-only: relies on SensorLib via github://dala318/esphome-qmi8658.
+# Re-enable once ported to an espidf-compatible qmi8658 component.
+#
+# esphome:
+#   libraries:
+#     - "Wire"
+#     - "SPI"
+#     - "SensorLib@0.2.1"
+#
+# external_components:
+#   - source: github://dala318/esphome-qmi8658
+#
+# sensor:
+#   - platform: qmi8658
+#     address: 0x6B
+#     # interrupt_pin_1: GPIO10
+#     # interrupt_pin_2: GPIO13       # Warning! Activating this with debug logging may kill your prompt ;)
+#     # acceleration_range: 4g
+#     # acceleration_odr: 100hz
+#     acceleration_x:
+#       name: "QMI8658 Acceleration X"
+#     acceleration_y:
+#       name: "QMI8658 Acceleration Y"
+#     acceleration_z:
+#       name: "QMI8658 Acceleration Z"
+#     gyroscope_x:
+#       name: "QMI8658 Gyro X"
+#     gyroscope_y:
+#       name: "QMI8658 Gyro Y"
+#     gyroscope_z:
+#       name: "QMI8658 Gyro Z"
+#     temperature:
+#       name: "QMI8658 Temperature"
+#       filters:
+#         - offset: 34.0
+#     update_interval: 5s

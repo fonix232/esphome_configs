@@ -1,0 +1,18 @@
+---
+packages:
+  mcu: !include ../../mcu/tuya/cb3s/base.yaml
+  base: !include ../../base.yaml
+  ir_receiver: !include
+    file: ../../component/infrared/receiver.yaml
+    vars:
+      ir_receiver_pin: 
+        number: GPIO7
+        inverted: true
+        mode: INPUT_PULLUP
+  ir_transmitter: !include
+    file: ../../component/infrared/transmitter.yaml
+    vars:
+      ir_transmitter_pin: GPIO26
+
+status_led:
+  pin: GPIO8

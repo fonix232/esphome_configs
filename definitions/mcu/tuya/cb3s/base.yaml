@@ -1,0 +1,8 @@
+---
+bk72xx:
+  board: cb3s
+#   framework:
+    # options:
+    #   LT_UART_DEFAULT_PORT: 2
+    #uart_port: 1
+

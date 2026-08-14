@@ -14,4 +14,3 @@ display:
   - id: !extend main_display
     data_rate: 10MHz
     auto_clear_enabled: False
-    rotation: 90

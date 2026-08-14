@@ -1,6 +1,6 @@
 ---
 packages:
-  board: !include ../../board/espressif/esp_ir_tr_v1.1/arduino.yaml
+  board: !include ../../board/espressif/esp_ir_tr_v1.1/base.yaml
   ir_transmitter: !include
     file: ../../component/infrared/transmitter.yaml
     vars:

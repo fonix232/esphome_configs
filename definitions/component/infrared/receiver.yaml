@@ -1,4 +1,9 @@
 ---
 remote_receiver:
   pin: ${ir_receiver_pin}
-  dump: all
+  # dump: raw
+  tolerance: 50%
+  filter: 250us
+  idle: 10ms
+  # buffer_size: 2kb # only for ESP8266
+

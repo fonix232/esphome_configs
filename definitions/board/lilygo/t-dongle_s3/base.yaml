@@ -1,5 +1,6 @@
 ---
 packages:
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
   base: !include ../../../base.yaml
   extended: !include ../../../extended.yaml
   display: !include ../../../component/display/lilygo_t-dongle_s3.yaml

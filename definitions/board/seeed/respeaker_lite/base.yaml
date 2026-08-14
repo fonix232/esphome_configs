@@ -1,4 +1,6 @@
 ---
+packages:
+  board_base: !include ../xiao_esp32s3/base.yaml
 
 light:
   - platform: esp32_rmt_led_strip

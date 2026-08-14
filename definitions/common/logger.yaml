@@ -1,8 +1,8 @@
 ---
 logger:
-  level: VERBOSE
-  initial_level: INFO
-  logs:
-    cc1101: VERBOSE
-    remote_transmitter: VERBOSE
-    remote_receiver: VERBOSE
+  level: ${log_level}
+  initial_level: ${log_level}
+  # logs:
+  #   cc1101: VERBOSE
+  #   remote_transmitter: VERBOSE
+  #   remote_receiver: VERBOSE

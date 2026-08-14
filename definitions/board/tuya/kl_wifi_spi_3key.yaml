@@ -21,7 +21,7 @@ binary_sensor:
         input: true
         pullup: true
       inverted: true
-    name: Power/Speed Button
+    name: Power-Speed Button
   - platform: gpio
     pin: 
       number: P7
@@ -37,4 +37,4 @@ binary_sensor:
         input: true
         pullup: true
       inverted: true
-    name: Mode/Demo button
+    name: Mode-Demo button

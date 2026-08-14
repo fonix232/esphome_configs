@@ -1,5 +1,6 @@
 ---
 packages:
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
   base: !include ../../../base.yaml
   extended: !include ../../../extended.yaml
   sdcard: !include 
@@ -22,6 +23,11 @@ logger:
 esp32:
   board: esp32-s3-devkitm-1
   flash_size: 16MB
+  framework:
+    sdkconfig_options:
+      CONFIG_EPD_OUTPUT_LUT_ASSEMBLY: "y"
+      CONFIG_ESP32S3_INSTRUCTION_SET_AI_DSP: "y"
+      CONFIG_ESP32S3_VECTOR_INSTRUCTIONS_SUPPORT: "y"
 
 psram:
   mode: octal

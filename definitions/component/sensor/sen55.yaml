@@ -33,7 +33,7 @@ sensor:
     humidity:
       name: "Humidity"
       accuracy_decimals: 2
-    voc:
+    voc_index:
       name: "VOC"
       id: voc_index
       algorithm_tuning:
@@ -43,7 +43,7 @@ sensor:
         gating_max_duration_minutes: 180
         std_initial: 50
         gain_factor: 230
-    nox:
+    nox_index:
       name: "NOx"
       id: nox_index
       algorithm_tuning:

@@ -1,4 +1,8 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
 packages:
-  board: !include ../../board/seeed/respeaker_lite/espidf.yaml
+  board: !include ../../board/seeed/respeaker_lite/base.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml
   audio: !include ../../component/audio/respeaker_lite.yaml

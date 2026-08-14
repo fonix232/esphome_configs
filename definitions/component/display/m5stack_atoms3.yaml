@@ -1,0 +1,25 @@
+---
+packages:
+#   display_base: !include
+#     file: base/ili9xxx.yaml
+#     vars:
+#       display_model: GC9107
+#       display_dc_pin: GPIO33
+#       display_reset_pin: GPIO34
+#       display_cs_pin: GPIO15
+#       display_invert_colors: False
+#       display_dimensions_height: 128
+#       display_dimensions_width: 128
+#       display_dimensions_offset_height: 32
+#       display_dimensions_offset_width: 0
+#   display_backlight_ledc: !include
+#     file: base/pwm_backlight_ledc.yaml
+#     vars:
+#       display_backlight_pin: GPIO16
+#       display_backlight_pin_inverted: False
+#   display_backlight: !include
+#     file: base/pwm_backlight.yaml
+
+# spi:
+#   mosi_pin: GPIO21
+#   clk_pin: GPIO17

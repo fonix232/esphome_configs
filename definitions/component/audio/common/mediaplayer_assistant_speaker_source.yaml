@@ -1,0 +1,30 @@
+---
+packages:
+  audio_files: !include audio_files.yaml
+  sendspin: !include sendspin.yaml
+
+media_player:
+  - id: media_player_0
+    platform: speaker_source
+    name: Media Player
+    internal: False
+    media_pipeline:
+      speaker: media_spk_resampling_input
+      format: ${speaker_format}
+      num_channels: ${media_channels}
+      sample_rate: ${speaker_sample_rate}
+    announcement_pipeline:
+      speaker: announcement_spk_resampling_input
+      format: ${speaker_format}
+      num_channels: ${announcement_channels}
+      sample_rate: ${speaker_sample_rate}
+    on_announcement:
+      - mixer_speaker.apply_ducking:
+          id: media_spk_mixer_input
+          decibel_reduction: 20
+          duration: 0.0s
+    volume_increment: ${speaker_volume_increment}
+    volume_min: ${speaker_volume_min}
+    volume_max: ${speaker_volume_max}
+
+

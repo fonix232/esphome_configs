@@ -1,4 +1,15 @@
 ---
+esphome:
+  on_boot:
+    priority: -10
+    then:
+      - light.turn_on:
+          id: onboard_led
+          red: 0%
+          green: 100%
+          blue: 0%
+          brightness: 30%
+
 spi:
   clk_pin: ${cc1101_clk_pin}
   mosi_pin: ${cc1101_mosi_pin}
@@ -14,12 +25,25 @@ remote_transmitter:
   carrier_duty_percent: 100%
   non_blocking: true
   pin: ${cc1101_gdo0_pin}
+  rmt_symbols: 96
   on_transmit:
     then:
       - cc1101.begin_tx
+      - light.turn_on:
+          id: onboard_led
+          red: 50%
+          green: 0%
+          blue: 100%
+          brightness: 30%
   on_complete:
     then:
       - cc1101.begin_rx
+      - light.turn_on:
+          id: onboard_led
+          red: 0%
+          green: 100%
+          blue: 0%
+          brightness: 30%
 
 remote_receiver:
   - id: cc1101_receiver

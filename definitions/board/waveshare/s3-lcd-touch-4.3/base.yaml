@@ -1,8 +1,9 @@
 ---
 packages:
-  base: !include ../../base.yaml
-  extended: !include ../../extended.yaml
-  display: !include ../../component/display/waveshare-esp32-s3-lcd-4.3.yaml
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+  display: !include ../../../component/display/waveshare-esp32-s3-lcd-4.3.yaml
 
 esphome:
   platformio_options:

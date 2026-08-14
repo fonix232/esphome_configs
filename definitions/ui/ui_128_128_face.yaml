@@ -1,0 +1,187 @@
+---
+# Animated face UI for 128x128 display
+# SenseCAP Watcher-style: vertical bar eyes with dark pupils
+# Green on black, with blink + expression animation
+#
+# Expressions (via face_expression_select):
+#   Idle      — neutral open eyes, auto-blink
+#   Happy     — squished bars, content squint
+#   Surprised — wide-open eyes, large pupils
+#   Listening — equalizer-style random bar bounce
+#   Sleeping  — flat horizontal lines
+
+globals:
+  - id: face_expression
+    type: int
+    initial_value: '0'
+
+select:
+  - platform: template
+    name: "Expression"
+    id: face_expression_select
+    options:
+      - "Idle"
+      - "Happy"
+      - "Surprised"
+      - "Listening"
+      - "Sleeping"
+    initial_option: "Idle"
+    optimistic: true
+    on_value:
+      - lambda: |-
+          if (x == "Idle") id(face_expression) = 0;
+          else if (x == "Happy") id(face_expression) = 1;
+          else if (x == "Surprised") id(face_expression) = 2;
+          else if (x == "Listening") id(face_expression) = 3;
+          else if (x == "Sleeping") id(face_expression) = 4;
+
+color:
+  - id: face_green
+    hex: "33FF55"
+
+lvgl:
+  bottom_layer:
+    bg_color: 0x000000
+
+  style_definitions:
+    - id: face_bar_style
+      bg_color: 0x33FF55
+      bg_opa: COVER
+      width: 4
+      radius: 1
+      border_width: 0
+      outline_width: 0
+      pad_all: 0
+    - id: face_pupil_style
+      bg_color: 0x000000
+      bg_opa: COVER
+      radius: 100
+      border_width: 0
+      outline_width: 0
+      pad_all: 0
+
+  pages:
+    - id: face_page
+      bg_color: 0x000000
+      border_width: 0
+      pad_all: 0
+      scrollbar_mode: "off"
+      widgets:
+        # Left eye — 7 vertical bars (x: 17–53, step 6)
+        - obj: {id: el0, styles: face_bar_style, x: 17, y: 54, height: 20}
+        - obj: {id: el1, styles: face_bar_style, x: 23, y: 50, height: 28}
+        - obj: {id: el2, styles: face_bar_style, x: 29, y: 46, height: 36}
+        - obj: {id: el3, styles: face_bar_style, x: 35, y: 42, height: 44}
+        - obj: {id: el4, styles: face_bar_style, x: 41, y: 46, height: 36}
+        - obj: {id: el5, styles: face_bar_style, x: 47, y: 50, height: 28}
+        - obj: {id: el6, styles: face_bar_style, x: 53, y: 54, height: 20}
+        # Left pupil
+        - obj: {id: elp, styles: face_pupil_style, x: 30, y: 57, width: 14, height: 14}
+
+        # Right eye — 7 vertical bars (x: 71–107, step 6)
+        - obj: {id: er0, styles: face_bar_style, x: 71, y: 54, height: 20}
+        - obj: {id: er1, styles: face_bar_style, x: 77, y: 50, height: 28}
+        - obj: {id: er2, styles: face_bar_style, x: 83, y: 46, height: 36}
+        - obj: {id: er3, styles: face_bar_style, x: 89, y: 42, height: 44}
+        - obj: {id: er4, styles: face_bar_style, x: 95, y: 46, height: 36}
+        - obj: {id: er5, styles: face_bar_style, x: 101, y: 50, height: 28}
+        - obj: {id: er6, styles: face_bar_style, x: 107, y: 54, height: 20}
+        # Right pupil
+        - obj: {id: erp, styles: face_pupil_style, x: 84, y: 57, width: 14, height: 14}
+
+interval:
+  - interval: 50ms
+    then:
+      - lambda: |-
+          // --- Face animation engine (20 fps) ---
+          static const int CY = 64;
+          static const int L_CX = 37;   // left eye center x
+          static const int R_CX = 91;   // right eye center x
+
+          // Height profiles per expression
+          static const int NEUTRAL[]  = {20, 28, 36, 44, 36, 28, 20};
+          static const int HAPPY[]    = {8, 10, 12, 14, 12, 10, 8};
+          static const int SURPRISE[] = {26, 36, 46, 54, 46, 36, 26};
+          static const int SLEEPING[] = {3, 3, 3, 3, 3, 3, 3};
+
+          // Blink state
+          static uint32_t blink_cd = 60;
+          static bool blinking = false;
+          static uint8_t blink_frame = 0;
+
+          int expr = id(face_expression);
+
+          // --- Select bar heights ---
+          int h[7];
+          const int *base;
+          switch (expr) {
+            case 1:  base = HAPPY; break;
+            case 2:  base = SURPRISE; break;
+            case 4:  base = SLEEPING; break;
+            default: base = NEUTRAL; break;
+          }
+          for (int i = 0; i < 7; i++) h[i] = base[i];
+
+          // Listening: equalizer-style random variation
+          if (expr == 3) {
+            for (int i = 0; i < 7; i++) {
+              h[i] = NEUTRAL[i] + (int)(esp_random() % 20) - 10;
+              if (h[i] < 6) h[i] = 6;
+              if (h[i] > 54) h[i] = 54;
+            }
+          }
+
+          // --- Auto-blink (skip while sleeping) ---
+          if (expr != 4) {
+            if (!blinking) {
+              if (blink_cd > 0) {
+                blink_cd--;
+              } else {
+                blinking = true;
+                blink_frame = 0;
+              }
+            }
+            if (blinking) {
+              // 8 frames: 0-2 close, 3-4 hold shut, 5-7 open
+              float t;
+              if (blink_frame < 3)
+                t = (blink_frame + 1) / 3.0f;
+              else if (blink_frame < 5)
+                t = 1.0f;
+              else
+                t = 1.0f - (blink_frame - 4) / 3.0f;
+              for (int i = 0; i < 7; i++) {
+                h[i] = std::max(2, (int)(h[i] * (1.0f - t) + 2.0f * t));
+              }
+              if (++blink_frame >= 8) {
+                blinking = false;
+                blink_cd = 40 + (esp_random() % 80);  // 2–6 s
+              }
+            }
+          }
+
+          // --- Update bar widgets ---
+          lv_obj_t* lb[] = {id(el0), id(el1), id(el2), id(el3),
+                            id(el4), id(el5), id(el6)};
+          lv_obj_t* rb[] = {id(er0), id(er1), id(er2), id(er3),
+                            id(er4), id(er5), id(er6)};
+
+          for (int i = 0; i < 7; i++) {
+            int y = CY - h[i] / 2;
+            lv_obj_set_height(lb[i], h[i]);
+            lv_obj_set_y(lb[i], y);
+            lv_obj_set_height(rb[i], h[i]);
+            lv_obj_set_y(rb[i], y);
+          }
+
+          // --- Update pupils ---
+          bool eyes_shut = blinking && blink_frame >= 3 && blink_frame <= 5;
+          bool show_pupil = (expr != 4) && (expr != 1) && !eyes_shut;
+
+          int ps = show_pupil ? ((expr == 2) ? 18 : 14) : 0;
+          int py = CY - ps / 2;
+
+          lv_obj_set_size(id(elp), ps, ps);
+          lv_obj_set_pos(id(elp), L_CX - ps / 2, py);
+          lv_obj_set_size(id(erp), ps, ps);
+          lv_obj_set_pos(id(erp), R_CX - ps / 2, py);
