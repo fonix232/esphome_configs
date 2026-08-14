@@ -1,4 +1,5 @@
 ---
 packages:
   board: !include ../../board/seeed/respeaker_lite/espidf.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
   audio: !include ../../component/audio/respeaker_lite.yaml

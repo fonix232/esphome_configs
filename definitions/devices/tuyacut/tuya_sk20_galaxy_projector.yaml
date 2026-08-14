@@ -1,6 +1,7 @@
 ---
 packages:
   board: !include ../../board/tuya/sk20.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_bk72xx.yaml
   galaxy_projector: !include
     file: ../../component/light/sk20_galaxy.yaml
     vars:

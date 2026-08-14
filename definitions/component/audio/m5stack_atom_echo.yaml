@@ -1,7 +1,21 @@
 ---
 packages:
-  mixer_speaker: !include common/mixer_speaker.yaml
-  mediaplayer: !include common/mediaplayer_assistant.yaml
+  mixer_speaker: !include
+    file: common/mixer_speaker.yaml
+    vars:
+      speaker_channels: 1
+      speaker_sample_rate: 16000
+      speaker_bits_per_sample: 16
+  mediaplayer: !include
+    file: common/mediaplayer_assistant_speaker.yaml
+    vars:
+      speaker_format: FLAC
+      speaker_sample_rate: 16000
+      speaker_volume_increment: 0.01
+      speaker_volume_min: 0.3
+      speaker_volume_max: 1.0
+      announcement_channels: 1
+      media_channels: 1
 
 i2s_audio:
   - id: i2s_audio_bus
@@ -20,6 +34,9 @@ microphone:
     correct_dc_offset: true
 
 speaker:
+  # Original Atom Echo (ESP32-PICO) has no PSRAM — keep the mixer task stack in internal RAM
+  - id: !extend speaker_mixer
+    task_stack_in_psram: false
   - id: speaker_0
     platform: i2s_audio
     dac_type: external

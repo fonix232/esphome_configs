@@ -1,4 +1,5 @@
 ---
 packages:
   board: !include ../../board/tuya/s18_ir_repeater.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_bk72xx.yaml
 

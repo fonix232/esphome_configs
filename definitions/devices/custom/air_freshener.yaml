@@ -1,7 +1,7 @@
 ---
 packages:
   board: !include ../../board/lilygo/t7_s3/espidf.yaml
-  # bt_proxy: !include ../component/bluetooth/proxy_espidf.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
 
 output:
   - id: vapo_output

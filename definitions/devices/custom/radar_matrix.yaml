@@ -1,6 +1,6 @@
 ---
 packages:
-  board: !include ../../board/waveshare/s3_matrix.espidf.yaml
+  board: !include ../../board/waveshare/s3-matrix/espidf.yaml
   bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
   ld2450: !include 
     file: ../../component/sensor/ld2450.yaml

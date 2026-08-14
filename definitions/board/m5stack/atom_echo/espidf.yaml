@@ -1,5 +1,5 @@
 ---
 packages:
   board_base: !include base.yaml
-  mcu: !include ../../../mcu/espressif/esp32.espidf.yaml
+  mcu: !include ../../../mcu/espressif/esp32/espidf.yaml
 

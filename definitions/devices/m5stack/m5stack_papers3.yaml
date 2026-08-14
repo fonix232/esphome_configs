@@ -1,7 +1,8 @@
 ---
 packages:
   board: !include ../../board/m5stack/papers3/espidf.yaml
-  boot_splash: !include 
+  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
+  boot_splash: !include
     file: ../../ui/screens/boot.yaml
     vars:
       display_size: 540x960

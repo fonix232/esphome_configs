@@ -10,7 +10,12 @@ uart:
 ld2450:
   id: ld2450_radar
   uart_id: uart_ld2450
-  throttle: 1000ms
+
+# `throttle` was removed from the ld2450 hub (2026.8); rate-limit per sensor instead
+.defaults:
+  throttled: &throttled
+    filters:
+      - throttle: 1000ms
 
 binary_sensor:
   - platform: ld2450
@@ -103,73 +108,103 @@ sensor:
     ld2450_id: ld2450_radar
     target_count:
       name: Presence Target Count
+      <<: *throttled
   - platform: ld2450
     ld2450_id: ld2450_radar
     still_target_count:
       name: Still Target Count
+      <<: *throttled
   - platform: ld2450
     ld2450_id: ld2450_radar
     moving_target_count:
       name: Moving Target Count
+      <<: *throttled
   - platform: ld2450
     ld2450_id: ld2450_radar
     target_1:
       x:
         name: Target-1 X
+        <<: *throttled
       y:
         name: Target-1 Y
+        <<: *throttled
       speed:
         name: Target-1 Speed
+        <<: *throttled
       angle:
         name: Target-1 Angle
+        <<: *throttled
       distance:
         name: Target-1 Distance
+        <<: *throttled
       resolution:
         name: Target-1 Resolution
+        <<: *throttled
     target_2:
       x:
         name: Target-2 X
+        <<: *throttled
       y:
         name: Target-2 Y
+        <<: *throttled
       speed:
         name: Target-2 Speed
+        <<: *throttled
       angle:
         name: Target-2 Angle
+        <<: *throttled
       distance:
         name: Target-2 Distance
+        <<: *throttled
       resolution:
         name: Target-2 Resolution
+        <<: *throttled
     target_3:
       x:
         name: Target-3 X
+        <<: *throttled
       y:
         name: Target-3 Y
+        <<: *throttled
       speed:
         name: Target-3 Speed
+        <<: *throttled
       angle:
         name: Target-3 Angle
+        <<: *throttled
       distance:
         name: Target-3 Distance
+        <<: *throttled
       resolution:
         name: Target-3 Resolution
+        <<: *throttled
     zone_1:
       target_count:
         name: Zone-1 All Target Count
+        <<: *throttled
       still_target_count:
         name: Zone-1 Still Target Count
+        <<: *throttled
       moving_target_count:
         name: Zone-1 Moving Target Count
+        <<: *throttled
     zone_2:
       target_count:
         name: Zone-2 All Target Count
+        <<: *throttled
       still_target_count:
         name: Zone-2 Still Target Count
+        <<: *throttled
       moving_target_count:
         name: Zone-2 Moving Target Count
+        <<: *throttled
     zone_3:
       target_count:
         name: Zone-3 All Target Count
+        <<: *throttled
       still_target_count:
         name: Zone-3 Still Target Count
+        <<: *throttled
       moving_target_count:
         name: Zone-3 Moving Target Count
+        <<: *throttled

@@ -41,6 +41,7 @@ micro_wake_word:
         wake_word: !lambda return wake_word;
 
 voice_assistant:
+  id: va
   microphone: mic_0
   micro_wake_word: micro_wake_word_0
   media_player: media_player_0

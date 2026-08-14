@@ -1,7 +1,8 @@
 ---
 packages:
   board: !include ../../board/lilygo/t7_s3/espidf.yaml
-  sen55: !include 
+  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
+  sen55: !include
     file: ../../component/sensor/sen55.yaml
     vars:
       i2c_sda_pin: GPIO13

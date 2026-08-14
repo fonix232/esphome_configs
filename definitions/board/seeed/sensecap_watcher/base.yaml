@@ -2,6 +2,10 @@
 esp32:
   flash_size: 32MB
   cpu_frequency: 240MHZ
+  framework:
+    advanced:
+      # Required for OTA with 32MB flash since 2026.8
+      enable_idf_experimental_features: true
 
 psram:
   mode: octal
@@ -23,8 +27,8 @@ esphome:
         #- output.turn_on: pin_power_grove
         
 packages:
-  base: !include ../../base.yaml
-  extended: !include ../../extended.yaml
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
 
 uart:
   - id: uart_0

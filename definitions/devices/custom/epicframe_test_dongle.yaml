@@ -1,6 +1,7 @@
 ---
 packages:
   board: !include ../../board/espressif/devkitc-1/espidf.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
   display_base: !include
     file: ../../component/display/waveshare_epaper_7.3in_e.yaml
     vars:

@@ -57,7 +57,7 @@ sensor:
       return (id(bat_adc_raw).state * 3.0) / Measurement_offset;
 
 packages:
-  display: !include ../../component/display/waveshare-esp32-s3-lcd-1.85c.yaml
-  audio: !include ../../component/audio/waveshare-esp32-s3-lcd-1.85c.yaml
-  base: !include ../../base.yaml
-  extended: !include ../../extended.yaml
+  display: !include ../../../component/display/waveshare-esp32-s3-lcd-1.85c.yaml
+  audio: !include ../../../component/audio/waveshare-esp32-s3-lcd-1.85c.yaml
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml

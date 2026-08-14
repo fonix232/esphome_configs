@@ -1,6 +1,7 @@
 ---
 packages:
   board: !include ../../board/waveshare/s3-zero/espidf.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
   rf_gateway: !include
     file: rf_gateway.yaml
     vars:

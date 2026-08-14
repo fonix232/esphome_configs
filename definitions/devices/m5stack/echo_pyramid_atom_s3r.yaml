@@ -1,5 +1,6 @@
 ---
 packages:
   board: !include ../../board/m5stack/atoms3r/espidf.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
   pyramid: !include echo_pyramid.yaml
   face: !include ../../ui/ui_128_128_face.yaml
