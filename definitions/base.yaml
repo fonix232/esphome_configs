@@ -2,6 +2,7 @@
 substitutions:
   encryption_key: !secret encryption_key
   ota_password: !secret ota_password
+  log_level: INFO
 
 esphome:
   name: ${name}

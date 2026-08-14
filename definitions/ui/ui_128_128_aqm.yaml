@@ -31,7 +31,9 @@ packages:
       font_name: icons_font_small
 
 lvgl:
-  disp_bg_color: lcars_background
+  rotation: 90
+  bottom_layer:
+    bg_color: lcars_background
   default_font: lcars_font_small
   border_width: 0
   outline_width: 0

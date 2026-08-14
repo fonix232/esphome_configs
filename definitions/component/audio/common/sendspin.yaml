@@ -1,0 +1,29 @@
+---
+# sendspin, media_source, audio_http, speaker_source merged into ESPHome core in 2026.3.0-2026.5.0
+
+sendspin:
+  id: sendspin_hub
+  task_stack_in_psram: false
+
+media_source:
+  - platform: sendspin
+    id: sendspin_media_source
+  - platform: audio_http
+    id: http_announcement_source
+    buffer_size: 250000
+  - platform: audio_http
+    id: http_media_source
+    buffer_size: 500000
+  
+  
+media_player:
+  - platform: sendspin
+    id: sendspin_group_media_player
+  - id: !extend media_player_0
+    media_pipeline:
+      sources:
+        - http_media_source
+        - sendspin_media_source
+    announcement_pipeline:
+      sources:
+        - http_announcement_source

@@ -13,3 +13,14 @@ psram:
 packages:
   base: !include ../../../base.yaml
   extended: !include ../../../extended.yaml
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: onboard_led
+    internal: true
+    pin: GPIO21
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    use_dma: true
+    rmt_symbols: 48

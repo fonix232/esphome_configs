@@ -1,0 +1,118 @@
+---
+# M5Stack Echo Pyramid (Voice Pyramid) Audio Component
+# Base: A167 - ES8311 DAC, ES7210 ADC, AW87559 amp, Si5351 clock
+# Designed for AtomS3R controller - I2S pins on bottom connector
+# I2C devices on bus_external (GPIO38/39 from AtomS3R bottom pins)
+
+packages:
+  mixer_speaker: !include 
+    file: common/mixer_speaker.yaml
+    vars:
+      speaker_channels: 1
+      speaker_sample_rate: 16000
+      speaker_bits_per_sample: 16
+  mediaplayer: !include
+    file: common/mediaplayer_assistant_speaker_source.yaml
+    vars:
+      speaker_format: FLAC
+      speaker_sample_rate: 16000
+      speaker_volume_increment: 0.01
+      speaker_volume_min: 0.3
+      speaker_volume_max: 1.0
+      announcement_channels: 1
+      media_channels: 1
+
+
+
+# GPIO expander on the Pyramid base (speaker enable)
+pi4ioe5v6408:
+  - id: pi4ioe5v6408_hub
+    i2c_id: bus_external
+    address: 0x43
+
+# AW87559 speaker amplifier
+aw87559:
+  id: audio_amp
+  i2c_id: bus_external
+  address: 0x5B
+
+# Si5351 programmable clock generator (MCLK source for audio codecs)
+si5351:
+  id: clock_gen
+  i2c_id: bus_external
+  address: 0x60
+
+# I2S bus - AtomS3R bottom pins: G8=LRCLK, G6=BCLK
+i2s_audio:
+  - id: i2s_audio_bus
+    i2s_lrclk_pin: GPIO8
+    i2s_bclk_pin: GPIO6
+
+# ES8311 audio codec (DAC - playback)
+audio_dac:
+  - platform: es8311
+    id: es8311_dac
+    i2c_id: bus_external
+    bits_per_sample: 16bit
+    sample_rate: 16000
+
+# ES7210 microphone ADC (capture with AEC)
+audio_adc:
+  - platform: es7210
+    id: es7210_adc
+    i2c_id: bus_external
+    address: 0x40
+    bits_per_sample: 16bit
+    sample_rate: 16000
+
+# Microphone - AtomS3R G5 = Pyramid I2S_DOUT (ES7210 ADC output)
+microphone:
+  - id: mic_0
+    platform: i2s_audio
+    i2s_din_pin: GPIO5
+    adc_type: external
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    channel: stereo
+
+# Speaker - AtomS3R G7 = Pyramid I2S_DIN (ES8311 DAC input)
+speaker:
+  - id: speaker_0
+    platform: i2s_audio
+    i2s_dout_pin: GPIO7
+    dac_type: external
+    bits_per_sample: 16bit
+    sample_rate: 16000
+    channel: mono
+    audio_dac: es8311_dac
+
+# Speaker enable via GPIO expander
+switch:
+  - platform: gpio
+    name: Speaker Enable
+    pin:
+      pi4ioe5v6408: pi4ioe5v6408_hub
+      number: 0
+      mode:
+        output: true
+    icon: "mdi:volume-high"
+    restore_mode: RESTORE_DEFAULT_ON
+
+# # Media player
+# media_player:
+#   - id: media_player_0
+#     platform: speaker
+#     name: Media Player
+#     volume_initial: 0.10
+#     volume_min: 0.0
+#     volume_max: 1.0
+#     announcement_pipeline:
+#       speaker: speaker_0
+#       format: FLAC
+#       sample_rate: 48000
+#       num_channels: 1
+#     files:
+#       - id: wake_word_triggered_sound
+#         file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/wake_word_triggered.flac
+#       - id: timer_finished_sound
+#         file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/timer_finished.flac

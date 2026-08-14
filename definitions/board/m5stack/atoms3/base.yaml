@@ -1,0 +1,38 @@
+---
+packages:
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+  display: !include ../../../component/display/m5stack_atoms3.yaml
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+
+# logger:
+#   baud_rate: 0
+
+i2c:
+  sda: GPIO38
+  scl: GPIO39
+  scan: true
+  id: bus_internal
+
+binary_sensor:
+  - platform: gpio
+    id: atoms3_button
+    name: "Button"
+    pin:
+      number: GPIO41
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+
+remote_transmitter:
+  pin: GPIO4
+  carrier_duty_percent: 50%
+
+sensor:
+  - platform: internal_temperature
+    name: "Chip Temp"

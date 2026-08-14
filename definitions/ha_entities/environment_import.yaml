@@ -1,0 +1,11 @@
+---
+
+sensor:
+  - platform: homeassistant
+    id: "${location_id}_environment_temperature"
+    name: "${location} Environment Temperature"
+    entity_id: sensor.${location_id}_environment_temperature
+  - platform: homeassistant
+    id: "${location_id}_environment_humidity"
+    name: "${location} Environment Humidity"
+    entity_id: sensor.${location_id}_environment_humidity

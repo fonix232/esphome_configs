@@ -1,0 +1,5 @@
+---
+packages:
+  mcu: !include ../../../mcu/linknlink/LL8720-P/base.yaml
+
+## TODO: Determine pinout

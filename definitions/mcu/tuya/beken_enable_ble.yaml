@@ -1,0 +1,5 @@
+---
+esphome:
+  platformio_options:
+    "custom_options.sys_config#h":
+      - "CFG_SUPPORT_BLE=1"

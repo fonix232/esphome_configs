@@ -1,0 +1,4 @@
+---
+packages:
+  board: !include ../../board/tuya/s18_ir_repeater.yaml
+

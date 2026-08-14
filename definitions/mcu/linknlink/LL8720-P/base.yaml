@@ -1,0 +1,8 @@
+---
+rtl87xx:
+  board: generic-rtl8720cf-2mb-896k # or generic-rtl8720cf-2mb-992k
+
+## Note: this MCU package comes with 384kB of RAM instead of the standard 256kB
+## Further info: https://fcc.report/FCC-ID/2A9BE-LL8720-P/6741544.pdf
+
+

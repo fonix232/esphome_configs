@@ -1,0 +1,7 @@
+---
+packages:
+  import: !include
+    file: environment_import.yaml
+    vars:
+      location: "Bedroom"
+      location_id: "bedroom"

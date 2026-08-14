@@ -1,9 +1,4 @@
 ---
-external_components:
-  - source: github://fonix232/esphome@ili9xxx-runtime-rotation
-    components: [ili9xxx]
-    refresh: 30s
-
 display:
   - platform: ili9xxx
     id: main_display

@@ -1,7 +1,7 @@
 ---
 packages:
   board_base: !include base.yaml
-  mcu: !include ../../../mcu/espressif/esp32-s3.espidf.yaml
+  mcu: !include ../../../mcu/espressif/esp32-s3/espidf.yaml
 
 esp32:
   framework:

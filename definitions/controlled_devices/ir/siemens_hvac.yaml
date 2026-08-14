@@ -1,3 +1,12 @@
 ---
+external_components:
+  - source: github://pr#15154
+    components: [climate_ir_siemens_ira211, remote_base]
+    refresh: 1h
 
-# Siemens IRA211 IR/RF codes
+climate:
+  - platform: climate_ir_siemens_ira211
+    name: "IRA211 Thermostat"
+    sensor: ${temperature_sensor}        # optional external temp sensor
+    supports_cool: true
+    supports_heat: true

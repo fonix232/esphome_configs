@@ -1,0 +1,30 @@
+---
+# AtomS3R 0.85" IPS 128x128 display (GC9107 via ili9xxx)
+# Backlight controlled by LP5562 on bsp_bus, not LEDC PWM
+packages:
+  # display_base: !include
+  #   file: base/ili9xxx.yaml
+  #   vars:
+  #     display_model: GC9107
+  #     display_dc_pin: GPIO42
+  #     display_reset_pin: GPIO48
+  #     display_cs_pin: GPIO14
+  #     display_invert_colors: False
+  #     display_dimensions_height: 128
+  #     display_dimensions_width: 128
+  #     display_dimensions_offset_height: 32
+  #     display_dimensions_offset_width: 0
+  display_base: !include
+    file: base/mipi_spi.yaml
+    vars:
+      display_model: ST7789V
+      display_dc_pin: GPIO42
+      display_reset_pin: GPIO48
+      display_cs_pin: GPIO14
+      display_invert_colors: True
+      display_dimensions_height: 128
+      display_dimensions_width: 128
+      display_dimensions_offset_height: 1
+      display_dimensions_offset_width: 2
+
+      

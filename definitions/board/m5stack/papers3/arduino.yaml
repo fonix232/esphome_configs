@@ -1,4 +1,4 @@
 ---
 packages:
   board_base: !include base.yaml
-  mcu: !include ../../../mcu/espressif/esp32-s3.arduino.yaml
+  mcu: !include ../../../mcu/espressif/esp32-s3/arduino.yaml

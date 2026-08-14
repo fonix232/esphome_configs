@@ -1,0 +1,203 @@
+---
+# RF Code Constants
+substitutions:
+  rf_code_brightness_up: "111111111111111100000101"
+  rf_code_brightness_down: "111111111111111100000110"
+  rf_code_off: "111111111111111100000111"
+  rf_code_on: "111111111111111100001000"
+  rf_code_red: "111111111111111100001001"
+  rf_code_green: "111111111111111100001010"
+  rf_code_blue: "111111111111111100001011"
+  rf_code_white: "111111111111111100001100"
+  rf_code_dark_orange: "111111111111111100001101"
+  rf_code_light_green: "111111111111111100001110"
+  rf_code_purple: "111111111111111100001111"
+  rf_code_flash: "111111111111111100010000"
+  rf_code_orange: "111111111111111100010001"
+  rf_code_teal: "111111111111111100010010"
+  rf_code_light_purple: "111111111111111100010011"
+  rf_code_strobe: "111111111111111100010100"
+  rf_code_yellow: "111111111111111100010101"
+  rf_code_greenish_blue: "111111111111111100010110"
+  rf_code_dark_pink: "111111111111111100010111"
+  rf_code_fade: "111111111111111100011000"
+  rf_code_warm_white: "111111111111111100011001"
+  rf_code_light_blue: "111111111111111100011010"
+  rf_code_pink: "111111111111111100011011"
+  rf_code_smooth: "111111111111111100011100"
+
+globals:
+  - id: skip_rf_transmit
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+
+scripts:
+    # Parameterized script to send any RF code
+  - id: send_rf_code
+    parameters:
+      code: string
+      name: string
+    then:
+      - lambda: |-
+          ESP_LOGI("rf_light", "send_rf_code called: name=%s skip=%d", name.c_str(), id(skip_rf_transmit));
+      - if:
+          condition:
+            lambda: 'return id(skip_rf_transmit);'
+          then:
+            - lambda: 'ESP_LOGI("rf_light", "Skipping RF transmission for %s (skip flag set)", name.c_str());'
+          else:
+            - lambda: 'ESP_LOGI("rf_light", "Sending RF Code: %s (%s)", name.c_str(), code.c_str());'
+            - remote_transmitter.transmit_rc_switch_raw:
+                code: !lambda 'return code;'
+                protocol: 1
+                repeat:
+                  times: 10
+                  wait_time: 0s
+            - lambda: 'ESP_LOGI("rf_light", "RF Code %s sent", name.c_str());'
+  
+  - id: send_rf_brightness_up
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_brightness_up);'
+          name: "Brightness Up"
+  - id: send_rf_brightness_down
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_brightness_down);'
+          name: "Brightness Down"
+  - id: send_rf_off
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_off);'
+          name: "Off"
+  - id: send_rf_on
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_on);'
+          name: "On"
+  - id: send_rf_red
+    then:
+      - script.execute: 
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_red);'
+          name: "Red"
+  - id: send_rf_green
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_green);'
+          name: "Green"
+  - id: send_rf_blue
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_blue);'
+          name: "Blue"
+  - id: send_rf_white
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_white);'
+          name: "White"
+  - id: send_rf_dark_orange
+    then:
+      - script.execute: 
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_dark_orange);'
+          name: "Dark Orange"
+  - id: send_rf_light_green
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_light_green);'
+          name: "Light Green"
+  - id: send_rf_purple
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_purple);'
+          name: "Purple"
+  - id: send_rf_flash
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_flash);'
+          name: "Flash"
+  - id: send_rf_orange
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_orange);'
+          name: "Orange"
+  - id: send_rf_teal
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_teal);'
+          name: "Teal"
+  - id: send_rf_light_purple
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_light_purple);'
+          name: "Light Purple"
+  - id: send_rf_strobe
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_strobe);'
+          name: "Strobe"
+  - id: send_rf_yellow
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_yellow);'
+          name: "Yellow"
+  - id: send_rf_greenish_blue
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_greenish_blue);'
+          name: "Greenish Blue"
+  - id: send_rf_dark_pink
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_dark_pink);'
+          name: "Dark Pink"
+  - id: send_rf_fade
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_fade);'
+          name: "Fade"
+  - id: send_rf_warm_white
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_warm_white);'
+          name: "Warm White"
+  - id: send_rf_light_blue
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_light_blue);'
+          name: "Light Blue"
+  - id: send_rf_pink
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_pink);'
+          name: "Pink"
+  - id: send_rf_smooth
+    then:
+      - script.execute:
+          id: send_rf_code
+          code: !lambda 'return id(rf_code_smooth);'
+          name: "Smooth"
+  
