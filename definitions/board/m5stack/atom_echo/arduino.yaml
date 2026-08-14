@@ -1,4 +1,0 @@
----
-packages:
-  bboard_basee: !include base.yaml
-  mcu: !include ../../../mcu/espressif/esp32.arduino.yaml

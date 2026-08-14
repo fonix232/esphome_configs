@@ -1,7 +1,7 @@
 ---
 packages:
   board: !include ../../board/tuya/sk20.yaml
-  bt_proxy: !include ../../component/bluetooth/proxy_bk72xx.yaml
+  # No bluetooth_proxy: WB3S is BK7231T (BLE 4.2) — bk72xx_ble needs a BLE 5.x SoC (BK7231N/BK7238)
   galaxy_projector: !include
     file: ../../component/light/sk20_galaxy.yaml
     vars:
