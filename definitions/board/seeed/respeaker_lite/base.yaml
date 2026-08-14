@@ -1,4 +1,9 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
+packages:
+  mcu: !include ../xiao_esp32s3/${framework}.yaml
 
 light:
   - platform: esp32_rmt_led_strip

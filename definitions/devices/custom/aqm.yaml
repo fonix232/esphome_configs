@@ -1,7 +1,10 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
 packages:
-  board: !include ../../board/lilygo/t7_s3/espidf.yaml
-  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
+  board: !include ../../board/lilygo/t7_s3/base.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml
   sen55: !include
     file: ../../component/sensor/sen55.yaml
     vars:

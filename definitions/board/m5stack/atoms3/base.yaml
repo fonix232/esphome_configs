@@ -1,5 +1,9 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
 packages:
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
   base: !include ../../../base.yaml
   extended: !include ../../../extended.yaml
   display: !include ../../../component/display/m5stack_atoms3.yaml

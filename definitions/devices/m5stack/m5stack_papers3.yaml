@@ -1,7 +1,10 @@
 ---
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
 packages:
-  board: !include ../../board/m5stack/papers3/espidf.yaml
-  bt_proxy: !include ../../component/bluetooth/proxy_espidf.yaml
+  board: !include ../../board/m5stack/papers3/${framework}.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml
   boot_splash: !include
     file: ../../ui/screens/boot.yaml
     vars:

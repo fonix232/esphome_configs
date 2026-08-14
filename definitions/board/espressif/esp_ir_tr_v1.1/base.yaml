@@ -1,5 +1,6 @@
 ---
 packages:
+  mcu: !include ../../../mcu/espressif/esp8285/arduino.yaml
   base: !include ../../../base.yaml
   # extended: !include ../../../extended.yaml
   
