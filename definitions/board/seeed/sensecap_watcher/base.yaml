@@ -6,6 +6,8 @@ esp32:
     advanced:
       # Required for OTA with 32MB flash since 2026.8
       enable_idf_experimental_features: true
+    sdkconfig_options:
+      CONFIG_FATFS_LFN_STACK: "y"
 
 psram:
   mode: octal
@@ -27,6 +29,7 @@ esphome:
         #- output.turn_on: pin_power_grove
         
 packages:
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
   base: !include ../../../base.yaml
   extended: !include ../../../extended.yaml
 

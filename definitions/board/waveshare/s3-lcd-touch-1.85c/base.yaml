@@ -56,9 +56,6 @@ sensor:
       // This simplifies to: (adc_raw * 3.0) / Measurement_offset
       return (id(bat_adc_raw).state * 3.0) / Measurement_offset;
 
-substitutions:
-  framework: espidf  # arduino | espidf — overridable per instance
-
 packages:
   mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
   display: !include ../../../component/display/waveshare-esp32-s3-lcd-1.85c.yaml
