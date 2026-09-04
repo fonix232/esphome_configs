@@ -206,6 +206,7 @@ motion:
 
 sensor:
   - platform: internal_temperature
+    id: chip_temperature
     name: "Chip Temp"
     entity_category: diagnostic
 
