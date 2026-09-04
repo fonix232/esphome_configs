@@ -23,6 +23,20 @@ packages:
       rtc_i2c_id: bsp_bus
   charging: !include ../../../component/power/m5stack_tab5_charging.yaml
   hosted_firmware: !include ../../../component/wifi/hosted_firmware.yaml
+  # The P4 has no radio — Wi-Fi and BLE are served by the on-board C6 over SDIO
+  hosted: !include
+    file: ../../../component/wifi/esp_hosted_sdio.yaml
+    vars:
+      hosted_variant: ESP32C6
+      hosted_reset_pin: GPIO15
+      hosted_clk_pin: GPIO12
+      hosted_cmd_pin: GPIO13
+      hosted_d0_pin: GPIO11
+      hosted_d1_pin: GPIO10
+      hosted_d2_pin: GPIO9
+      hosted_d3_pin: GPIO8
+      # Keeps the SDIO buffer pool out of internal RAM, which a large UI will eat
+      hosted_use_psram: "true"
 
 esphome:
   # ST7123/ST7121 panel and touch support, and BLE over ESP-Hosted, landed in 2026.8
@@ -38,21 +52,6 @@ esp32:
     advanced:
       # MIPI-DSI and the ESP-Hosted SDIO transport are still gated behind this
       enable_idf_experimental_features: true
-
-# The P4 has no radio — Wi-Fi and BLE are served by the on-board C6 over SDIO
-esp32_hosted:
-  variant: ESP32C6
-  active_high: true
-  clk_pin: GPIO12
-  cmd_pin: GPIO13
-  d0_pin: GPIO11
-  d1_pin: GPIO10
-  d2_pin: GPIO9
-  d3_pin: GPIO8
-  reset_pin: GPIO15
-  slot: 1
-  # Keeps the SDIO buffer pool out of internal RAM, which a large UI will eat
-  use_psram: true
 
 psram:
   mode: hex
