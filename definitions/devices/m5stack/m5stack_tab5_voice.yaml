@@ -1,0 +1,6 @@
+---
+# M5Stack Tab5 as a Home Assistant voice satellite: everything in the base
+# device, plus on-device wake word and the voice assistant pipeline.
+packages:
+  tab5: !include m5stack_tab5.yaml
+  voice: !include ../../component/audio/voice.yaml

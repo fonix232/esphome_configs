@@ -1,0 +1,20 @@
+---
+# GT911 — original Tab5 hardware (ILI9881C panel, manufactured before Oct 2025)
+touchscreen:
+  - platform: gt911
+    id: main_touch
+    i2c_id: bsp_bus
+    interrupt_pin: GPIO23
+    reset_pin:
+      pi4ioe5v6408: pi4ioe1
+      number: 5
+    # Interrupt driven — no polling needed
+    update_interval: never
+    transform:
+      swap_xy: true
+      mirror_x: true
+    calibration:
+      x_min: 0
+      x_max: 1280
+      y_min: 0
+      y_max: 720

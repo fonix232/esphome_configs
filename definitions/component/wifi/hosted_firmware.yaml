@@ -1,0 +1,13 @@
+---
+# Keeps the ESP-Hosted co-processor (the Tab5's ESP32-C6) in step with the
+# ESP-Hosted library ESPHome was built against. Surfaces as an update entity
+# in Home Assistant; nothing is flashed to the C6 unless it is triggered.
+http_request:
+  verify_ssl: true
+
+update:
+  - platform: esp32_hosted
+    name: "Co-processor Firmware"
+    type: http
+    source: https://esphome.github.io/esp-hosted-firmware/manifest/esp32c6.json
+    update_interval: 6h

@@ -1,0 +1,8 @@
+---
+# The ESP32-P4 has no radio of its own — Wi-Fi/BLE come from a co-processor
+# over ESP-Hosted, and the Arduino framework does not support the variant, so
+# ESP-IDF is the only framework available here.
+esp32:
+  variant: ESP32P4
+  framework:
+    type: esp-idf
