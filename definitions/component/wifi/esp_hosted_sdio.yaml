@@ -1,0 +1,35 @@
+---
+# ESP-Hosted wireless co-processor over SDIO (4-bit) — gives hosts without
+# radios (e.g. ESP32-P4) WiFi/BT via a companion chip (e.g. ESP32-C6).
+# The wifi: config itself still comes from wifi/base.yaml via base.yaml.
+#
+# Required vars:
+#   hosted_variant    — co-processor chip (ESP32 | ESP32S2 | ESP32S3 | ESP32C2 | ESP32C3 | ESP32C6)
+#   hosted_reset_pin, hosted_clk_pin, hosted_cmd_pin,
+#   hosted_d0_pin, hosted_d1_pin, hosted_d2_pin, hosted_d3_pin
+# Optional vars:
+#   hosted_slot       — host SDIO slot the co-processor is wired to (default 1)
+#   hosted_use_psram  — move transport buffers to PSRAM; needs DMA-capable
+#                       PSRAM on the host (ESP32-P4/S3). Use when internal RAM
+#                       runs low (large LVGL UIs), else boot may assert in
+#                       sdio_mempool_create.
+#
+# Pair with wifi/hosted_firmware.yaml for the co-processor firmware update
+# entity.
+
+substitutions:
+  hosted_slot: "1"
+  hosted_use_psram: "false"
+
+esp32_hosted:
+  variant: ${hosted_variant}
+  active_high: true
+  reset_pin: ${hosted_reset_pin}
+  clk_pin: ${hosted_clk_pin}
+  cmd_pin: ${hosted_cmd_pin}
+  d0_pin: ${hosted_d0_pin}
+  d1_pin: ${hosted_d1_pin}
+  d2_pin: ${hosted_d2_pin}
+  d3_pin: ${hosted_d3_pin}
+  slot: ${hosted_slot}
+  use_psram: ${hosted_use_psram}
