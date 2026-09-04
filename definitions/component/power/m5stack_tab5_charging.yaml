@@ -141,7 +141,7 @@ script:
           const float volts = id(battery_voltage).state;
           const float amps = id(battery_current).state;
           const float level = id(battery_level).state;
-          const std::string mode = id(charge_mode).state;
+          const std::string mode = id(charge_mode).current_option();
 
           // Nothing sensible to do until the INA226 has reported
           if (std::isnan(volts) || std::isnan(amps)) {
