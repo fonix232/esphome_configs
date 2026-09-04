@@ -1,12 +1,13 @@
 ---
+# Epson RX8130 RTC. Read once at boot so the clock is right before the network
+# is, and written back whenever Home Assistant syncs the time.
 time:
   - platform: rx8130
     id: rtc_time
-    i2c_id: bsp_bus
+    i2c_id: ${rtc_i2c_id}
     address: 0x32
     timezone: Europe/London
-    # The RTC is only read at boot and written when HA syncs — the internal
-    # clock is accurate enough between syncs
+    # No repeated reads — the internal clock is accurate enough between syncs
     update_interval: never
   - id: !extend homeassistant_time
     on_time_sync:

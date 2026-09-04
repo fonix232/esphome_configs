@@ -1,0 +1,67 @@
+---
+# 3-bit RGB indicator hanging off a PI4IOE5V6408 — one GPIO per colour, active
+# low, so eight fixed colours rather than a real dimmable light. Exposed as a
+# select; the individual channel switches stay internal.
+#
+# vars: led_id, led_name, led_expander, led_pin_r, led_pin_g, led_pin_b, led_initial
+switch:
+  - platform: gpio
+    id: ${led_id}_red
+    internal: True
+    restore_mode: ALWAYS_OFF
+    pin:
+      pi4ioe5v6408: ${led_expander}
+      number: ${led_pin_r}
+      inverted: true
+      mode:
+        output: true
+  - platform: gpio
+    id: ${led_id}_green
+    internal: True
+    restore_mode: ALWAYS_OFF
+    pin:
+      pi4ioe5v6408: ${led_expander}
+      number: ${led_pin_g}
+      inverted: true
+      mode:
+        output: true
+  - platform: gpio
+    id: ${led_id}_blue
+    internal: True
+    restore_mode: ALWAYS_OFF
+    pin:
+      pi4ioe5v6408: ${led_expander}
+      number: ${led_pin_b}
+      inverted: true
+      mode:
+        output: true
+
+select:
+  - platform: template
+    id: ${led_id}
+    name: "${led_name}"
+    entity_category: config
+    icon: "mdi:led-on"
+    optimistic: true
+    restore_value: true
+    initial_option: "${led_initial}"
+    # Index doubles as the colour bitmask: bit0 red, bit1 green, bit2 blue
+    options:
+      - "Off"
+      - "Red"
+      - "Green"
+      - "Yellow"
+      - "Blue"
+      - "Magenta"
+      - "Cyan"
+      - "White"
+    on_value:
+      - switch.control:
+          id: ${led_id}_red
+          state: !lambda return (i & 1) != 0;
+      - switch.control:
+          id: ${led_id}_green
+          state: !lambda return (i & 2) != 0;
+      - switch.control:
+          id: ${led_id}_blue
+          state: !lambda return (i & 4) != 0;

@@ -34,6 +34,7 @@ The folder `definitions/` contains, as the name suggests, all definitions, in th
 - Dongles - these are used all over my home to provide BLE proxying as well as triangulation using the Bermuda integration of Home Assistant
 - Tuya SK20 - a galaxy projector of which I have a handful around my home. Pretty straightforward config, albeit with a few features (such as the laser star projector) disabled
 - M5Stack Tab5 - a 5" ESP32-P4 touch panel, see below
+- M5Stack StamPLC - a DIN-rail ESP32-S3 PLC with relays and opto-isolated inputs, see below
 - More to come...
 
 ## M5Stack Tab5
@@ -76,3 +77,46 @@ charging, positive while running on battery. `Charge Mode` picks the policy:
   below 6.4 V
 
 `Charge Status` reports what the charger is actually doing.
+
+## M5Stack StamPLC
+
+`definitions/devices/m5stack/m5stamplc.yaml` covers the controller: 4 relays and
+8 opto-isolated inputs on the AW9523 expander, the 3 front buttons, LCD backlight
+and status LED on the PI4IOE5V6408, the 1.14" ST7789V screen showing live input
+and relay state, the RX8130 RTC, the LM75B board temperature sensor, the INA226
+monitoring the side GPIO.EXT rail, and the buzzer. RS485 is set up as `uart_rs485`
+(9600 8E1) ready for a `modbus_controller`; CAN on GPIO42/43 and the SPI microSD
+slot are left to per-device configs.
+
+`definitions/devices/m5stack/m5stamplc_io_ac.yaml` is the same controller with
+both expansion modules fitted.
+
+The AW9523 has no ESPHome core component, so the board pulls `aw9523b` from
+`github://m5stack/esphome-yaml/components`.
+
+GPIO3 is shared between the LCD reset and the reset line of both I2C expanders,
+and has to be high before anything on the bus is probed. A `power_supply` claims
+it — that component initialises at POWER priority, ahead of the I2C bus and the
+expanders, so package merge order doesn't matter.
+
+### Expansion modules
+
+The **AC module** adds a mains PSU for the controller plus one SPST-NO contact
+rated 240VAC / 10A, on a second PI4IOE5V6408 at 0x44, along with its own 3-bit
+RGB status LED.
+
+The **IO module** adds two isolated analog acquisition channels (voltage and
+current per channel), two solid-state relay outputs and one mechanical relay,
+behind an STM32 that presents them as an I2C register file. There is no ESPHome
+driver for it, so `definitions/component/plc/m5stamplc_io.yaml` talks to the
+register map directly from lambdas. With `IO PWM Mode` on, the two SSR outputs
+follow the `IO CH1/CH2 Duty` numbers at `IO PWM Frequency` instead of the plain
+on/off switches.
+
+Its address comes from the module's DIP switch, anywhere in 0x20-0x2F. The
+default here is 0x20; when cascading modules, override it per device:
+
+```yaml
+substitutions:
+  stamplc_io_address: "0x21"
+```

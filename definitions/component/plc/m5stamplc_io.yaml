@@ -1,0 +1,324 @@
+---
+# StamPLC IO module — galvanically isolated expansion carrying two analog
+# acquisition channels (INA226 per channel, read back as voltage in mV and
+# current in µA), two solid-state relay outputs and one mechanical relay.
+#
+# An STM32 behind the isolator presents all of it as a small register file, so
+# there is no ESPHome driver for it; the register access below goes straight at
+# the I2C bus instead. The module's address is set by its DIP switch anywhere in
+# 0x20-0x2F, so several modules can be cascaded — override per device:
+#
+#   substitutions:
+#     stamplc_io_address: "0x21"
+#
+# Register map (M5Stack M5StamPLC library, modules/M5StamPLC_IO.h):
+#   0x00-0x01  CH1 voltage, int16 LE, mV
+#   0x02-0x05  CH1 current, int32 LE, µA
+#   0x06-0x07  CH2 voltage      0x08-0x0B  CH2 current
+#   0x10       IO control: b0 SSR1, b1 SSR2, b2 CH1 pull-up, b3 CH2 pull-up,
+#              b4 relay, b5 PWM mode
+#   0x30       PWM frequency, 1-100Hz
+#   0x31-0x34  CH1/CH2 duty, uint16 LE, permille
+#   0xFB       system status: b0 CH1 sensor fault, b1 CH2 sensor fault
+#   0xFE       firmware version
+substitutions:
+  stamplc_io_address: "0x20"
+
+globals:
+  # Shadow of the write-only-in-practice IO control register, so a single bit
+  # can be flipped without a read-modify-write race against the outputs
+  - id: stamplc_io_ctrl
+    type: uint8_t
+    initial_value: "0"
+    restore_value: false
+  - id: stamplc_io_online
+    type: bool
+    initial_value: "false"
+    restore_value: false
+
+script:
+  - id: stamplc_io_apply_ctrl
+    mode: queued
+    then:
+      - lambda: |-
+          uint8_t buf[2] = {0x10, id(stamplc_io_ctrl)};
+          auto err = id(bus_internal)->write(${stamplc_io_address}, buf, 2);
+          if (err != esphome::i2c::ERROR_OK) {
+            ESP_LOGW("stamplc_io", "IO control write failed (error %d)", (int) err);
+          }
+
+  - id: stamplc_io_write_duty
+    mode: queued
+    parameters:
+      channel: int
+      permille: int
+    then:
+      - lambda: |-
+          uint8_t buf[3] = {(uint8_t) (channel == 2 ? 0x33 : 0x31),
+                            (uint8_t) (permille & 0xFF),
+                            (uint8_t) (permille >> 8)};
+          auto err = id(bus_internal)->write(${stamplc_io_address}, buf, 3);
+          if (err != esphome::i2c::ERROR_OK) {
+            ESP_LOGW("stamplc_io", "CH%d duty write failed (error %d)", channel, (int) err);
+          }
+
+switch:
+  - platform: template
+    id: stamplc_io_relay
+    name: "IO Relay"
+    icon: "mdi:electric-switch"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: id(stamplc_io_ctrl) |= (1 << 4);
+      - script.execute: stamplc_io_apply_ctrl
+    turn_off_action:
+      - lambda: id(stamplc_io_ctrl) &= ~(1 << 4);
+      - script.execute: stamplc_io_apply_ctrl
+
+  - platform: template
+    id: stamplc_io_ssr_1
+    name: "IO SSR 1"
+    icon: "mdi:electric-switch"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: id(stamplc_io_ctrl) |= (1 << 0);
+      - script.execute: stamplc_io_apply_ctrl
+    turn_off_action:
+      - lambda: id(stamplc_io_ctrl) &= ~(1 << 0);
+      - script.execute: stamplc_io_apply_ctrl
+
+  - platform: template
+    id: stamplc_io_ssr_2
+    name: "IO SSR 2"
+    icon: "mdi:electric-switch"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: id(stamplc_io_ctrl) |= (1 << 1);
+      - script.execute: stamplc_io_apply_ctrl
+    turn_off_action:
+      - lambda: id(stamplc_io_ctrl) &= ~(1 << 1);
+      - script.execute: stamplc_io_apply_ctrl
+
+  # Pull-ups for passive sensors on the acquisition channels
+  - platform: template
+    id: stamplc_io_ch1_pullup
+    name: "IO CH1 Pull-up"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: id(stamplc_io_ctrl) |= (1 << 2);
+      - script.execute: stamplc_io_apply_ctrl
+    turn_off_action:
+      - lambda: id(stamplc_io_ctrl) &= ~(1 << 2);
+      - script.execute: stamplc_io_apply_ctrl
+
+  - platform: template
+    id: stamplc_io_ch2_pullup
+    name: "IO CH2 Pull-up"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: id(stamplc_io_ctrl) |= (1 << 3);
+      - script.execute: stamplc_io_apply_ctrl
+    turn_off_action:
+      - lambda: id(stamplc_io_ctrl) &= ~(1 << 3);
+      - script.execute: stamplc_io_apply_ctrl
+
+  # With PWM mode on, the two SSR outputs follow the duty numbers below
+  - platform: template
+    id: stamplc_io_pwm_mode
+    name: "IO PWM Mode"
+    entity_category: config
+    icon: "mdi:square-wave"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: id(stamplc_io_ctrl) |= (1 << 5);
+      - script.execute: stamplc_io_apply_ctrl
+    turn_off_action:
+      - lambda: id(stamplc_io_ctrl) &= ~(1 << 5);
+      - script.execute: stamplc_io_apply_ctrl
+
+number:
+  - platform: template
+    id: stamplc_io_pwm_frequency
+    name: "IO PWM Frequency"
+    entity_category: config
+    unit_of_measurement: "Hz"
+    min_value: 1
+    max_value: 100
+    step: 1
+    initial_value: 50
+    optimistic: true
+    restore_value: true
+    mode: box
+    set_action:
+      - lambda: |-
+          uint8_t buf[2] = {0x30, (uint8_t) x};
+          auto err = id(bus_internal)->write(${stamplc_io_address}, buf, 2);
+          if (err != esphome::i2c::ERROR_OK) {
+            ESP_LOGW("stamplc_io", "PWM frequency write failed (error %d)", (int) err);
+          }
+
+  - platform: template
+    id: stamplc_io_ch1_duty
+    name: "IO CH1 Duty"
+    entity_category: config
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 0.1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: slider
+    set_action:
+      - script.execute:
+          id: stamplc_io_write_duty
+          channel: 1
+          permille: !lambda return (int) (x * 10.0f + 0.5f);
+
+  - platform: template
+    id: stamplc_io_ch2_duty
+    name: "IO CH2 Duty"
+    entity_category: config
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 0.1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: slider
+    set_action:
+      - script.execute:
+          id: stamplc_io_write_duty
+          channel: 2
+          permille: !lambda return (int) (x * 10.0f + 0.5f);
+
+sensor:
+  - platform: template
+    id: stamplc_io_ch1_voltage
+    name: "IO CH1 Voltage"
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    update_interval: never
+  - platform: template
+    id: stamplc_io_ch1_current
+    name: "IO CH1 Current"
+    device_class: current
+    state_class: measurement
+    unit_of_measurement: "A"
+    accuracy_decimals: 4
+    update_interval: never
+  - platform: template
+    id: stamplc_io_ch2_voltage
+    name: "IO CH2 Voltage"
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    update_interval: never
+  - platform: template
+    id: stamplc_io_ch2_current
+    name: "IO CH2 Current"
+    device_class: current
+    state_class: measurement
+    unit_of_measurement: "A"
+    accuracy_decimals: 4
+    update_interval: never
+
+text_sensor:
+  - platform: template
+    id: stamplc_io_status
+    name: "IO Module Status"
+    entity_category: diagnostic
+    icon: "mdi:chip"
+    update_interval: never
+
+interval:
+  # Both channels come back in one 12-byte burst starting at 0x00
+  - interval: 10s
+    then:
+      - lambda: |-
+          uint8_t reg = 0x00;
+          uint8_t d[12];
+          bool ok = id(bus_internal)->write_readv(${stamplc_io_address}, &reg, 1, d, 12) ==
+                    esphome::i2c::ERROR_OK;
+
+          if (!ok) {
+            if (id(stamplc_io_online)) {
+              ESP_LOGW("stamplc_io", "module at 0x%02X stopped responding", ${stamplc_io_address});
+              id(stamplc_io_online) = false;
+              id(stamplc_io_ch1_voltage).publish_state(NAN);
+              id(stamplc_io_ch1_current).publish_state(NAN);
+              id(stamplc_io_ch2_voltage).publish_state(NAN);
+              id(stamplc_io_ch2_current).publish_state(NAN);
+              id(stamplc_io_status).publish_state("Offline");
+            }
+            return;
+          }
+
+          if (!id(stamplc_io_online)) {
+            ESP_LOGI("stamplc_io", "module at 0x%02X online", ${stamplc_io_address});
+            id(stamplc_io_online) = true;
+            // Push the cached output state back out in case the module reset
+            id(stamplc_io_apply_ctrl).execute();
+          }
+
+          int16_t v1 = (int16_t) ((uint16_t) d[0] | ((uint16_t) d[1] << 8));
+          int32_t c1 = (int32_t) ((uint32_t) d[2] | ((uint32_t) d[3] << 8) |
+                                  ((uint32_t) d[4] << 16) | ((uint32_t) d[5] << 24));
+          int16_t v2 = (int16_t) ((uint16_t) d[6] | ((uint16_t) d[7] << 8));
+          int32_t c2 = (int32_t) ((uint32_t) d[8] | ((uint32_t) d[9] << 8) |
+                                  ((uint32_t) d[10] << 16) | ((uint32_t) d[11] << 24));
+
+          id(stamplc_io_ch1_voltage).publish_state(v1 / 1000.0f);
+          id(stamplc_io_ch1_current).publish_state(c1 / 1000000.0f);
+          id(stamplc_io_ch2_voltage).publish_state(v2 / 1000.0f);
+          id(stamplc_io_ch2_current).publish_state(c2 / 1000000.0f);
+
+  - interval: 60s
+    then:
+      - lambda: |-
+          if (!id(stamplc_io_online)) {
+            return;
+          }
+          uint8_t reg = 0xFB;
+          uint8_t status = 0;
+          uint8_t version = 0;
+          if (id(bus_internal)->write_readv(${stamplc_io_address}, &reg, 1, &status, 1) !=
+              esphome::i2c::ERROR_OK) {
+            return;
+          }
+          reg = 0xFE;
+          id(bus_internal)->write_readv(${stamplc_io_address}, &reg, 1, &version, 1);
+
+          std::string text;
+          if (status & (1 << 0)) {
+            text += "CH1 sensor fault";
+          }
+          if (status & (1 << 1)) {
+            if (!text.empty()) {
+              text += ", ";
+            }
+            text += "CH2 sensor fault";
+          }
+          if (text.empty()) {
+            text = str_sprintf("OK (firmware 0x%02X)", version);
+          }
+          id(stamplc_io_status).publish_state(text);
+
+esphome:
+  on_boot:
+    # After the restored switch states have been applied to the shadow register
+    - priority: -100
+      then:
+        - script.execute: stamplc_io_apply_ctrl
