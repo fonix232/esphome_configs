@@ -5,7 +5,7 @@
 # controller is transformed to match. For portrait, drop `rotation` here and
 # the `transform`/`calibration` blocks in the touch package.
 packages:
-  touch: !include m5stack_tab5_touch_${tab5_touch_driver}.yaml
+  touch: !include ../touch/m5stack_tab5_${tab5_touch_driver}.yaml
 
 # Until LVGL or a display lambda is added, ESPHome draws its test card here,
 # which doubles as a panel/orientation check on first flash.
