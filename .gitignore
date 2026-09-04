@@ -8,6 +8,7 @@
 !definitions/*
 !definitions/**/*
 definitions/external_component/*
+!definitions/external_component/.gitkeep
 
 **/.esphome/*
 

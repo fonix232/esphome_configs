@@ -1,0 +1,78 @@
+---
+# M5Stack Tab5 audio path — ES8388 DAC (speaker + headphone jack) and
+# ES7210 ADC (dual mic array), both on one I2S bus.
+packages:
+  mixer_speaker: !include
+    file: common/mixer_speaker.yaml
+    vars:
+      speaker_channels: 1
+      speaker_sample_rate: 48000
+      speaker_bits_per_sample: 16
+  mediaplayer: !include
+    file: common/mediaplayer_assistant_speaker.yaml
+    vars:
+      speaker_format: FLAC
+      speaker_sample_rate: 48000
+      speaker_volume_increment: 0.05
+      speaker_volume_min: 0.1
+      speaker_volume_max: 1.0
+      announcement_channels: 1
+      media_channels: 1
+
+i2s_audio:
+  - id: i2s_audio_bus
+    i2s_lrclk_pin: GPIO29
+    i2s_bclk_pin: GPIO27
+    i2s_mclk_pin: GPIO30
+
+audio_adc:
+  - id: adc_0
+    platform: es7210
+    i2c_id: bsp_bus
+    bits_per_sample: 16bit
+    sample_rate: 16000
+
+audio_dac:
+  - id: dac_0
+    platform: es8388
+    i2c_id: bsp_bus
+
+microphone:
+  - id: mic_0
+    platform: i2s_audio
+    i2s_audio_id: i2s_audio_bus
+    i2s_din_pin: GPIO28
+    adc_type: external
+    sample_rate: 16000
+    bits_per_sample: 16bit
+
+speaker:
+  - id: speaker_0
+    platform: i2s_audio
+    i2s_audio_id: i2s_audio_bus
+    i2s_dout_pin: GPIO26
+    dac_type: external
+    audio_dac: dac_0
+    channel: mono
+    sample_rate: 48000
+    bits_per_sample: 16bit
+    buffer_duration: 100ms
+
+select:
+  - platform: es8388
+    es8388_id: dac_0
+    dac_output:
+      id: es8388_dac_output
+      name: "DAC Output"
+    adc_input_mic:
+      id: es8388_adc_input
+      name: "ADC Input Mic"
+
+esphome:
+  on_boot:
+    # The DAC comes up on LINE2; the on-board speaker hangs off LINE1
+    - priority: -100
+      then:
+        - select.set:
+            id: es8388_dac_output
+            option: "LINE1"

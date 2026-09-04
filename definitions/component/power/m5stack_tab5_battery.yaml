@@ -1,0 +1,55 @@
+---
+# M5Stack Tab5 battery telemetry — INA226 on the 2S pack rail.
+#
+# Current sign convention on this board: positive = discharging (running on
+# battery), negative = charging.
+sensor:
+  - platform: ina226
+    address: 0x41
+    i2c_id: bsp_bus
+    shunt_resistance: 0.005ohm
+    max_current: 8.192A
+    adc_averaging: 16
+    update_interval: 10s
+    bus_voltage:
+      id: battery_voltage
+      name: "Battery Voltage"
+    current:
+      id: battery_current
+      name: "Battery Current"
+    power:
+      id: battery_power
+      name: "Battery Power"
+
+  # Piecewise curve for the 2S Li-ion pack (6.0 V empty, 8.4 V full). Voltage
+  # sags under load and rises while charging, so the reading is averaged before
+  # it is mapped to a percentage.
+  - platform: template
+    id: battery_level
+    name: "Battery Level"
+    device_class: battery
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: !lambda return id(battery_voltage).state;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 6
+          send_every: 3
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - 6.00 -> 0
+            - 6.60 -> 5
+            - 7.00 -> 15
+            - 7.20 -> 30
+            - 7.40 -> 45
+            - 7.60 -> 60
+            - 7.80 -> 72
+            - 8.00 -> 85
+            - 8.20 -> 97
+            - 8.40 -> 100
+      - clamp:
+          min_value: 0
+          max_value: 100

@@ -1,0 +1,24 @@
+---
+# M5Stack Tab5 — 5" ESP32-P4 touch panel with battery, audio and RTC.
+#
+# Panel revisions need different drivers. Units made before ~Oct 2025 use an
+# ILI9881C panel with a separate GT911 touch controller; later units use an
+# integrated ST7123 or ST7121. If the display stays blank but touch works, you
+# picked the wrong display model; if touch logs an I2C error, you picked the
+# wrong touch driver. Override per instance:
+#
+#   substitutions:
+#     tab5_display_model: M5STACK-TAB5-ST7123   # or -ST7121
+#     tab5_touch_driver: st7123
+substitutions:
+  framework: espidf  # the ESP32-P4 has no Arduino support
+  tab5_display_model: M5STACK-TAB5
+  tab5_touch_driver: gt911
+
+packages:
+  board: !include ../../board/m5stack/tab5/base.yaml
+  audio: !include ../../component/audio/m5stack_tab5.yaml
+  # BLE is proxied through the on-board C6. This needs ESP-Hosted co-processor
+  # firmware built with Bluetooth support — use the "Co-processor Firmware"
+  # update entity if the BLE stack fails to come up.
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml

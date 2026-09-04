@@ -1,0 +1,21 @@
+---
+time:
+  - platform: rx8130
+    id: rtc_time
+    i2c_id: bsp_bus
+    address: 0x32
+    timezone: Europe/London
+    # The RTC is only read at boot and written when HA syncs — the internal
+    # clock is accurate enough between syncs
+    update_interval: never
+  - id: !extend homeassistant_time
+    on_time_sync:
+      then:
+        rx8130.write_time:
+          id: rtc_time
+
+esphome:
+  on_boot:
+    - priority: 600
+      then:
+        - rx8130.read_time: rtc_time

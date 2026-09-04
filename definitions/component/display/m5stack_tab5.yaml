@@ -1,0 +1,36 @@
+---
+# M5Stack Tab5 5" 720x1280 MIPI-DSI panel + capacitive touch + PWM backlight.
+#
+# Configured landscape (1280x720): the panel is rotated 270°, and the touch
+# controller is transformed to match. For portrait, drop `rotation` here and
+# the `transform`/`calibration` blocks in the touch package.
+packages:
+  touch: !include m5stack_tab5_touch_${tab5_touch_driver}.yaml
+
+# Until LVGL or a display lambda is added, ESPHome draws its test card here,
+# which doubles as a panel/orientation check on first flash.
+display:
+  - id: main_display
+    platform: mipi_dsi
+    model: ${tab5_display_model}
+    dimensions:
+      width: 720
+      height: 1280
+    rotation: 270°
+    reset_pin:
+      pi4ioe5v6408: pi4ioe1
+      number: 4
+
+output:
+  - platform: ledc
+    id: backlight_pwm
+    pin: GPIO22
+    frequency: 1000Hz
+
+light:
+  - platform: monochromatic
+    id: backlight
+    name: "Display Backlight"
+    output: backlight_pwm
+    restore_mode: RESTORE_DEFAULT_ON
+    default_transition_length: 250ms

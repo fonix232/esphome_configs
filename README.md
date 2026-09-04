@@ -33,4 +33,46 @@ The folder `definitions/` contains, as the name suggests, all definitions, in th
 - Air Quality Monitor - utilising a LilyGo T7-S3, a Sensirion SEN55, a battery, and a 128x128 display, this device provides not just raw PM/VOC/NOx readouts, but also broken down AQI indices currently based on the EPA US Air Quality Index charts
 - Dongles - these are used all over my home to provide BLE proxying as well as triangulation using the Bermuda integration of Home Assistant
 - Tuya SK20 - a galaxy projector of which I have a handful around my home. Pretty straightforward config, albeit with a few features (such as the laser star projector) disabled
+- M5Stack Tab5 - a 5" ESP32-P4 touch panel, see below
 - More to come...
+
+## M5Stack Tab5
+
+`definitions/devices/m5stack/m5stack_tab5.yaml` covers the whole board: the MIPI-DSI
+panel and touch controller, the ES8388/ES7210 audio path with a media player, the
+RX8130 RTC, both PI4IOE5V6408 IO expanders, the INA226 battery monitor, the BMI270
+IMU, and Wi-Fi/BLE through the on-board ESP32-C6 over ESP-Hosted.
+`m5stack_tab5_voice.yaml` adds on-device wake word and the voice assistant pipeline
+on top of it. Requires ESPHome 2026.8 or newer.
+
+### Panel revision
+
+The Tab5 shipped with two different panels. Units made before mid-October 2025 use an
+ILI9881C with a separate GT911 touch controller — that is the default. Later units use
+an integrated ST7123 or ST7121, selected per instance:
+
+```yaml
+substitutions:
+  tab5_display_model: M5STACK-TAB5-ST7123   # or M5STACK-TAB5-ST7121
+  tab5_touch_driver: st7123
+```
+
+If the display stays blank with no error in the log but touch works, the display model
+is wrong (try the other integrated model); if the touch driver logs an I2C error, the
+touch driver is wrong.
+
+### Charging
+
+The Tab5's charger is exposed as `CHG_EN` (on/off) and `nCHG_QC_EN` (1A quick charge vs
+0.5A standard), with the INA226 reporting pack voltage and current — negative while
+charging, positive while running on battery. `Charge Mode` picks the policy:
+
+- **Smart** (default) — holds the pack between `Charge Resume Below` (65%) and
+  `Charge Target` (80%) instead of sitting at 100% on a permanent wall charger, and only
+  runs the 1A charger below `Quick Charge Below` (60%) so the top-off stays cool
+- **Full** — charge to 100% and keep it there
+- **Manual** — the policy leaves both switches alone
+- **Off** — no charging at all, including the low-voltage rescue that otherwise kicks in
+  below 6.4 V
+
+`Charge Status` reports what the charger is actually doing.

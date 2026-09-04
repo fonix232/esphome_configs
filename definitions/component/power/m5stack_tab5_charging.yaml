@@ -1,0 +1,239 @@
+---
+# M5Stack Tab5 charge control.
+#
+# The charger is driven through the 0x44 IO expander:
+#   P7 CHG_EN      high = charging allowed
+#   P5 nCHG_QC_EN  active low = 1A quick charge, high = 0.5A standard
+#   P6 CHG_STAT    input, low while the charger is pushing current
+#
+# A Tab5 that lives on a wall charger sits at 100% permanently, which is the
+# fastest way to age a Li-ion pack. "Smart" mode keeps it cycling in a narrow
+# band instead, and only runs the 1A charger while the pack is low, so the
+# top-off happens at 0.5A and stays cool.
+packages:
+  battery: !include m5stack_tab5_battery.yaml
+
+switch:
+  - platform: gpio
+    id: charge_enable
+    name: "Charging Enabled"
+    entity_category: config
+    icon: "mdi:battery-charging"
+    pin:
+      pi4ioe5v6408: pi4ioe2
+      number: 7
+    # Charging on by default, so a flat pack recovers even if nothing else runs
+    restore_mode: ALWAYS_ON
+
+  - platform: gpio
+    id: quick_charge
+    name: "Quick Charge"
+    entity_category: config
+    icon: "mdi:battery-charging-high"
+    pin:
+      pi4ioe5v6408: pi4ioe2
+      number: 5
+      inverted: true
+    restore_mode: ALWAYS_OFF
+
+binary_sensor:
+  - platform: gpio
+    id: charger_active
+    name: "Charger Active"
+    device_class: battery_charging
+    pin:
+      pi4ioe5v6408: pi4ioe2
+      number: 6
+      mode: INPUT_PULLDOWN
+    on_state:
+      - script.execute: charge_control
+
+  - platform: template
+    id: external_power
+    name: "External Power"
+    device_class: plug
+    lambda: |-
+      if (std::isnan(id(battery_current).state)) return {};
+      return id(battery_current).state < 0.05f;
+
+select:
+  - platform: template
+    id: charge_mode
+    name: "Charge Mode"
+    entity_category: config
+    icon: "mdi:battery-heart-variant"
+    optimistic: true
+    restore_value: true
+    initial_option: "Smart"
+    options:
+      # Hold the pack between the resume and target levels
+      - "Smart"
+      # Charge to 100% and keep it there
+      - "Full"
+      # Leave both switches alone — control them yourself
+      - "Manual"
+      # No charging at all, including the low-battery rescue
+      - "Off"
+    on_value:
+      - script.execute: charge_control
+
+number:
+  - platform: template
+    id: charge_target
+    name: "Charge Target"
+    entity_category: config
+    icon: "mdi:battery-charging-80"
+    unit_of_measurement: "%"
+    min_value: 50
+    max_value: 100
+    step: 5
+    initial_value: 80
+    optimistic: true
+    restore_value: true
+    mode: box
+    on_value:
+      - script.execute: charge_control
+
+  - platform: template
+    id: charge_resume
+    name: "Charge Resume Below"
+    entity_category: config
+    icon: "mdi:battery-charging-30"
+    unit_of_measurement: "%"
+    min_value: 20
+    max_value: 95
+    step: 5
+    initial_value: 65
+    optimistic: true
+    restore_value: true
+    mode: box
+    on_value:
+      - script.execute: charge_control
+
+  - platform: template
+    id: quick_charge_below
+    name: "Quick Charge Below"
+    entity_category: config
+    icon: "mdi:battery-charging-high"
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 5
+    initial_value: 60
+    optimistic: true
+    restore_value: true
+    mode: box
+    on_value:
+      - script.execute: charge_control
+
+text_sensor:
+  - platform: template
+    id: charge_status
+    name: "Charge Status"
+    icon: "mdi:battery-sync"
+    update_interval: never
+
+script:
+  - id: charge_control
+    mode: restart
+    then:
+      - lambda: |-
+          const float volts = id(battery_voltage).state;
+          const float amps = id(battery_current).state;
+          const float level = id(battery_level).state;
+          const std::string mode = id(charge_mode).state;
+
+          // Nothing sensible to do until the INA226 has reported
+          if (std::isnan(volts) || std::isnan(amps)) {
+            id(charge_status).publish_state("Unknown");
+            return;
+          }
+
+          // Below ~5V the pack is absent or the connector is off
+          if (volts < 5.0f) {
+            id(charge_status).publish_state("No battery");
+            return;
+          }
+
+          const bool charging_now = amps < -0.05f;
+          const bool on_battery = amps > 0.05f;
+          const bool have_level = !std::isnan(level);
+
+          bool want_charge = id(charge_enable).state;
+          bool want_quick = id(quick_charge).state;
+
+          if (mode == "Off") {
+            want_charge = false;
+            want_quick = false;
+          } else if (mode == "Full") {
+            want_charge = true;
+            want_quick = have_level && level < id(quick_charge_below).state;
+          } else if (mode == "Smart") {
+            float target = id(charge_target).state;
+            float resume = id(charge_resume).state;
+            // Keep a usable band even if the two numbers are set to overlap
+            if (resume >= target) resume = target - 5.0f;
+
+            if (have_level) {
+              if (level >= target) {
+                want_charge = false;
+              } else if (level <= resume) {
+                want_charge = true;
+              }
+              // Between the two thresholds the current state is held, so the
+              // charger doesn't chatter around the target
+            }
+            want_quick = have_level && level < id(quick_charge_below).state;
+          }
+          // "Manual" falls through with both switches left as the user set them
+
+          // Rescue a deeply discharged pack whatever the policy says, short of
+          // charging having been turned off outright
+          const bool critical = volts < 6.4f;
+          if (critical && mode != "Off" && mode != "Manual") {
+            want_charge = true;
+            want_quick = true;
+          }
+
+          if (mode != "Manual") {
+            if (want_quick != id(quick_charge).state) {
+              ESP_LOGI("tab5.charge", "quick charge -> %s", want_quick ? "1A" : "0.5A");
+              want_quick ? id(quick_charge).turn_on() : id(quick_charge).turn_off();
+            }
+            if (want_charge != id(charge_enable).state) {
+              ESP_LOGI("tab5.charge", "charging -> %s (%.2fV, %.0f%%)",
+                       want_charge ? "on" : "off", volts, have_level ? level : 0.0f);
+              want_charge ? id(charge_enable).turn_on() : id(charge_enable).turn_off();
+            }
+          }
+
+          const char *status;
+          if (critical && !want_charge) {
+            status = "Battery critical";
+          } else if (mode == "Off") {
+            status = "Disabled";
+          } else if (charging_now) {
+            status = id(quick_charge).state ? "Charging (1A)" : "Charging (0.5A)";
+          } else if (on_battery) {
+            status = "Discharging";
+          } else if (!id(charge_enable).state) {
+            status = "Holding";
+          } else if (have_level && level >= 99.0f) {
+            status = "Full";
+          } else {
+            status = "Idle";
+          }
+          id(charge_status).publish_state(status);
+
+interval:
+  - interval: 30s
+    then:
+      - script.execute: charge_control
+
+esphome:
+  on_boot:
+    # After the INA226 and the restored select/number values are up
+    - priority: -100
+      then:
+        - delay: 15s
+        - script.execute: charge_control

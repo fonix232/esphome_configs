@@ -1,0 +1,230 @@
+---
+# M5Stack Tab5 — ESP32-P4 (host) + ESP32-C6 (radio, via ESP-Hosted over SDIO)
+#
+# 5" 720x1280 MIPI-DSI panel, capacitive touch, ES8388 DAC + ES7210 ADC audio,
+# RX8130 RTC, 2x PI4IOE5V6408 IO expanders, INA226 battery monitor, BMI270 IMU.
+#
+# Panel revision is selected per device with these substitutions:
+#   tab5_display_model  M5STACK-TAB5 (ILI9881C, pre Oct-2025 units)
+#                       M5STACK-TAB5-ST7123 / M5STACK-TAB5-ST7121 (later units)
+#   tab5_touch_driver   gt911 (original) | st7123 (ST7123/ST7121 units)
+substitutions:
+  tab5_display_model: M5STACK-TAB5
+  tab5_touch_driver: gt911
+
+packages:
+  mcu: !include ../../../mcu/espressif/esp32-p4/${framework}.yaml
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+  display: !include ../../../component/display/m5stack_tab5.yaml
+  rtc: !include ../../../component/time/rx8130.yaml
+  charging: !include ../../../component/power/m5stack_tab5_charging.yaml
+  hosted_firmware: !include ../../../component/wifi/hosted_firmware.yaml
+
+esphome:
+  # ST7123/ST7121 panel and touch support, and BLE over ESP-Hosted, landed in 2026.8
+  min_version: 2026.8.0
+
+esp32:
+  flash_size: 16MB
+  # 400MHz is the P4 default but is flagged experimental and may not boot
+  cpu_frequency: 360MHz
+  # Production Tab5 silicon is rev 3.0+; set to true only for pre-release units
+  engineering_sample: false
+  framework:
+    advanced:
+      # MIPI-DSI and the ESP-Hosted SDIO transport are still gated behind this
+      enable_idf_experimental_features: true
+
+# The P4 has no radio — Wi-Fi and BLE are served by the on-board C6 over SDIO
+esp32_hosted:
+  variant: ESP32C6
+  active_high: true
+  clk_pin: GPIO12
+  cmd_pin: GPIO13
+  d0_pin: GPIO11
+  d1_pin: GPIO10
+  d2_pin: GPIO9
+  d3_pin: GPIO8
+  reset_pin: GPIO15
+  slot: 1
+  # Keeps the SDIO buffer pool out of internal RAM, which a large UI will eat
+  use_psram: true
+
+psram:
+  mode: hex
+  speed: 200MHz
+
+logger:
+  hardware_uart: USB_SERIAL_JTAG
+
+# LDO3 powers the MIPI-DSI PHY
+esp_ldo:
+  - channel: 3
+    voltage: 2.5V
+
+# System bus: IO expanders, RTC, touch, audio codecs, IMU, INA226.
+# Also exposed on M-Bus pins 17/18. External/Grove I2C (GPIO53 SDA, GPIO54 SCL)
+# is left undefined — add it per device if something is plugged into Port A.
+i2c:
+  - id: bsp_bus
+    sda: GPIO31
+    scl: GPIO32
+    frequency: 400kHz
+    scan: true
+
+pi4ioe5v6408:
+  - id: pi4ioe1
+    address: 0x43
+    i2c_id: bsp_bus
+    # 0: O - wifi_antenna_int_ext (low = internal, high = external)
+    # 1: O - speaker_enable
+    # 2: O - external_5v_power
+    # 3: NC
+    # 4: O - lcd reset
+    # 5: O - touch panel reset
+    # 6: O - camera reset
+    # 7: I - headphone detect
+  - id: pi4ioe2
+    address: 0x44
+    i2c_id: bsp_bus
+    # 0: O - wifi_power (C6 power rail)
+    # 1: NC
+    # 2: NC
+    # 3: O - usb_5v_power (USB-A host port)
+    # 4: O - poweroff pulse
+    # 5: O - quick charge enable (active low)
+    # 6: I - charging status
+    # 7: O - charge enable
+
+switch:
+  - platform: gpio
+    id: wifi_power
+    name: "WiFi Power"
+    entity_category: config
+    pin:
+      pi4ioe5v6408: pi4ioe2
+      number: 0
+    restore_mode: ALWAYS_ON
+  - platform: gpio
+    id: usb_5v_power
+    name: "USB Host Power"
+    entity_category: config
+    pin:
+      pi4ioe5v6408: pi4ioe2
+      number: 3
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    id: external_5v_power
+    name: "External 5V Power"
+    entity_category: config
+    pin:
+      pi4ioe5v6408: pi4ioe1
+      number: 2
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    id: speaker_enable
+    name: "Speaker Enable"
+    entity_category: config
+    pin:
+      pi4ioe5v6408: pi4ioe1
+      number: 1
+    restore_mode: ALWAYS_ON
+  # Driven by the antenna select below
+  - platform: gpio
+    id: wifi_antenna_int_ext
+    internal: True
+    pin:
+      pi4ioe5v6408: pi4ioe1
+      number: 0
+  # Pulsed by the "Power Off" button — cuts the battery rail
+  - platform: gpio
+    id: poweroff_pulse
+    internal: True
+    pin:
+      pi4ioe5v6408: pi4ioe2
+      number: 4
+
+binary_sensor:
+  - platform: gpio
+    id: headphone_detect
+    name: "Headphone Detect"
+    pin:
+      pi4ioe5v6408: pi4ioe1
+      number: 7
+
+select:
+  - platform: template
+    id: wifi_antenna_select
+    name: "WiFi Antenna"
+    entity_category: config
+    options:
+      - "Internal"
+      - "External"
+    initial_option: "Internal"
+    optimistic: true
+    restore_value: true
+    on_value:
+      - if:
+          condition:
+            lambda: return i == 0;
+          then:
+            - switch.turn_off: wifi_antenna_int_ext
+          else:
+            - switch.turn_on: wifi_antenna_int_ext
+
+button:
+  # Toggles PWROFF 5x at 50ms, as the M5Stack BSP does, then the PMIC latches off
+  - platform: template
+    name: "Power Off"
+    id: power_off_button
+    entity_category: config
+    icon: "mdi:power"
+    on_press:
+      - repeat:
+          count: 5
+          then:
+            - switch.turn_on: poweroff_pulse
+            - delay: 50ms
+            - switch.turn_off: poweroff_pulse
+            - delay: 50ms
+
+# BMI270 IMU on the system bus
+motion:
+  - platform: bmi270
+    id: imu
+    i2c_id: bsp_bus
+    address: 0x68
+    update_interval: 60s
+
+sensor:
+  - platform: internal_temperature
+    name: "Chip Temp"
+    entity_category: diagnostic
+
+  - platform: motion
+    motion_id: imu
+    type: acceleration_x
+    name: "Accel X"
+  - platform: motion
+    motion_id: imu
+    type: acceleration_y
+    name: "Accel Y"
+  - platform: motion
+    motion_id: imu
+    type: acceleration_z
+    name: "Accel Z"
+  - platform: motion
+    motion_id: imu
+    type: pitch
+    name: "Pitch"
+  - platform: motion
+    motion_id: imu
+    type: roll
+    name: "Roll"
+
+  - platform: bmi270
+    bmi270_id: imu
+    type: temperature
+    name: "IMU Temperature"
+    entity_category: diagnostic
