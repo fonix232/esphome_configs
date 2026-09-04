@@ -11,6 +11,11 @@
 substitutions:
   tab5_display_model: M5STACK-TAB5
   tab5_touch_driver: gt911
+  # Some Tab5 units (any panel revision) carry pre-production v1.x P4 silicon
+  # (boot ROM "esp32p4-eco2-20240710" = v1.3). Those need "true" — with the
+  # rev3 bootloader layout they boot-loop with an illegal-instruction panic
+  # right at "entry 0x4ffac2ca", before any log output.
+  tab5_engineering_sample: "false"
 
 packages:
   mcu: !include ../../../mcu/espressif/esp32-p4/${framework}.yaml
@@ -45,9 +50,9 @@ esphome:
 esp32:
   flash_size: 16MB
   # 400MHz is the P4 default but is flagged experimental and may not boot
+  # (and v1.x silicon tops out at 360MHz anyway)
   cpu_frequency: 360MHz
-  # Production Tab5 silicon is rev 3.0+; set to true only for pre-release units
-  engineering_sample: false
+  engineering_sample: ${tab5_engineering_sample}
   framework:
     advanced:
       # MIPI-DSI and the ESP-Hosted SDIO transport are still gated behind this
