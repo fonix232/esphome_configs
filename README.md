@@ -68,15 +68,51 @@ The Tab5's charger is exposed as `CHG_EN` (on/off) and `nCHG_QC_EN` (1A quick ch
 0.5A standard), with the INA226 reporting pack voltage and current — negative while
 charging, positive while running on battery. `Charge Mode` picks the policy:
 
-- **Smart** (default) — holds the pack between `Charge Resume Below` (65%) and
-  `Charge Target` (80%) instead of sitting at 100% on a permanent wall charger, and only
-  runs the 1A charger below `Quick Charge Below` (60%) so the top-off stays cool
+- **Smart** (default) — holds the pack between `Charge Resume Below` (20%) and
+  `Charge Target` (70%) instead of sitting at 100% on a permanent wall charger, and only
+  runs the 1A charger below `Quick Charge Below` (40%) so the top-off stays cool
 - **Full** — charge to 100% and keep it there
 - **Manual** — the policy leaves both switches alone
 - **Off** — no charging at all, including the low-voltage rescue that otherwise kicks in
   below 6.4 V
 
-`Charge Status` reports what the charger is actually doing.
+**Charge to Full Once** is the only way past the ceiling in Smart mode. It expires after
+6 hours, so a charge that never terminates cannot strand the pack at 100%. Charging is
+also held off above `Charge Temperature Limit` (55°C die temperature, against a
+44-50°C idle), with the low-voltage rescue outranking both. `Charge Status` reports what
+the charger is actually doing.
+
+There is deliberately no periodic automatic full charge. The familiar "recalibrate every
+three months" advice is for coulomb-counting gauges, which accumulate integration error
+and need full-charge and full-discharge flags to re-anchor; this is a voltage lookup with
+nothing to drift. See below for what it does learn.
+
+### Battery calibration
+
+The percentage is not read off a fixed voltage table. Two things make a terminal voltage
+lie about state of charge, and both are corrected:
+
+- **Load.** At 0.5A into a ~0.2 ohm pack the reading moves ~100mV, about 4% of this pack.
+  The estimate is IR-compensated, and when a decision is close the policy pauses charging
+  for 15 seconds and reads the pack at rest instead. The current step across that pause is
+  also where `Pack Internal Resistance` comes from, so the two halves feed each other.
+- **Curve shape.** Li-ion is flat through the middle, so the discharge curve is kept as
+  fractions of its span and stretched onto the learned endpoints rather than mapped
+  linearly.
+
+`Learned Full Voltage` is captured at charge termination — the one moment the pack is both
+full and unloaded. It is the charger's constant-voltage setpoint, a hardware constant that
+does not drift with age, so one observation lasts the life of the device; press **Charge to
+Full Once** to take it, and `Battery Calibrated` reports whether it has been. Until then it
+runs on an 8.4V seed.
+
+`Observed Minimum Voltage` is named for what it is. A true empty is not measurable — the
+device dies before it can record anything — so it only ever tracks the lowest resting
+voltage the pack has actually reached.
+
+Both persist across reboots, written only past a 30mV hysteresis: restoring globals commit
+to NVS on a 60 second cycle, so a value that wandered freely would write flash every
+minute. **Reset Battery Calibration** puts everything back to the seeded defaults.
 
 ## M5Stack StamPLC
 

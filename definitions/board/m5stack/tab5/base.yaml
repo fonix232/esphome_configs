@@ -26,7 +26,7 @@ packages:
     file: ../../../component/time/rx8130.yaml
     vars:
       rtc_i2c_id: bsp_bus
-  charging: !include ../../../component/power/m5stack_tab5_charging.yaml
+  charging: !include ../../../component/power/m5stack_tab5_charging_smart.yaml
   hosted_firmware: !include ../../../component/wifi/hosted_firmware.yaml
   # The P4 has no radio — Wi-Fi and BLE are served by the on-board C6 over SDIO
   hosted: !include
