@@ -1,0 +1,168 @@
+---
+# M5Stack Tab5 battery model with runtime self-calibration.
+#
+# Replaces the fixed 6.0-8.4V curve in m5stack_tab5_battery.yaml with one whose
+# endpoints are learned from the pack itself. Paired with
+# m5stack_tab5_charging_smart.yaml, which owns the policy and does the learning.
+#
+# Two things make a voltage reading lie about state of charge:
+#
+#   * Load. At 0.5A into a ~0.2 ohm pack the terminal voltage moves ~100mV,
+#     which is ~4% SoC here. Everything below works on an IR-compensated
+#     estimate, OCV = V + I*R, using a resistance learned from the charge
+#     pauses in the policy file. The sign convention does both directions in
+#     one expression: discharge is positive and the pack sags, charge is
+#     negative and it lifts.
+#   * The curve shape. Li-ion is famously flat through the middle, so a linear
+#     map between endpoints would read ~50% for most of the pack's life. The
+#     ten knee points below are the original curve expressed as a fraction of
+#     its span, so the same shape can be stretched onto the learned endpoints.
+#
+# What is worth learning, and what is not: the full-charge voltage is the
+# charger's constant-voltage setpoint (4.2V/cell), a hardware constant that
+# does not drift as the pack ages, so one observation pins it forever. The
+# empty end is not really learnable at all — the device dies before it can
+# record anything — so it is tracked opportunistically as the lowest resting
+# voltage the pack has actually reached, and reported as such.
+substitutions:
+  # Seeded from the chemistry so the device is useful before it learns anything
+  battery_v_full_default: "8.40"
+  battery_v_empty_default: "6.00"
+  battery_r_internal_default: "0.20"
+
+globals:
+  - id: batt_v_full
+    type: float
+    initial_value: ${battery_v_full_default}
+    restore_value: true
+  - id: batt_v_empty
+    type: float
+    initial_value: ${battery_v_empty_default}
+    restore_value: true
+  - id: batt_r_internal
+    type: float
+    initial_value: ${battery_r_internal_default}
+    restore_value: true
+  - id: batt_full_learned
+    type: bool
+    initial_value: "false"
+    restore_value: true
+  - id: batt_empty_learned
+    type: bool
+    initial_value: "false"
+    restore_value: true
+
+sensor:
+  - platform: ina226
+    address: 0x41
+    i2c_id: bsp_bus
+    shunt_resistance: 0.005ohm
+    max_current: 8.192A
+    adc_averaging: 16
+    # Fast enough that a charge pause yields fresh samples either side of it
+    update_interval: 5s
+    bus_voltage:
+      id: battery_voltage
+      name: "Battery Voltage"
+    current:
+      id: battery_current
+      name: "Battery Current"
+    power:
+      id: battery_power
+      name: "Battery Power"
+
+  - platform: template
+    id: battery_ocv
+    name: "Battery OCV"
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      const float v = id(battery_voltage).state;
+      const float i = id(battery_current).state;
+      if (std::isnan(v) || std::isnan(i) || v < 5.0f) {
+        return {};
+      }
+      return v + i * id(batt_r_internal);
+
+  - platform: template
+    id: battery_level
+    name: "Battery Level"
+    device_class: battery
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: |-
+      const float v = id(battery_voltage).state;
+      const float i = id(battery_current).state;
+      if (std::isnan(v) || std::isnan(i) || v < 5.0f) {
+        return {};
+      }
+      const float ocv = v + i * id(batt_r_internal);
+
+      const float span = id(batt_v_full) - id(batt_v_empty);
+      if (span < 0.5f) {
+        return {};
+      }
+      float f = (ocv - id(batt_v_empty)) / span;
+      if (f <= 0.0f) {
+        return 0.0f;
+      }
+      if (f >= 1.0f) {
+        return 100.0f;
+      }
+
+      // Discharge curve as (fraction of span -> SoC), from the original
+      // 6.0-8.4V calibration, so the shape survives rescaling
+      static const float KNEE_F[10] = {0.0f,  0.250f, 0.4167f, 0.500f, 0.5833f,
+                                       0.6667f, 0.750f, 0.8333f, 0.9167f, 1.0f};
+      static const float KNEE_SOC[10] = {0.0f, 5.0f, 15.0f, 30.0f, 45.0f,
+                                         60.0f, 72.0f, 85.0f, 97.0f, 100.0f};
+      for (int k = 1; k < 10; k++) {
+        if (f <= KNEE_F[k]) {
+          const float t = (f - KNEE_F[k - 1]) / (KNEE_F[k] - KNEE_F[k - 1]);
+          return KNEE_SOC[k - 1] + t * (KNEE_SOC[k] - KNEE_SOC[k - 1]);
+        }
+      }
+      return 100.0f;
+    filters:
+      - sliding_window_moving_average:
+          window_size: 6
+          send_every: 2
+
+  # What the device currently believes about the pack
+  - platform: template
+    id: battery_full_voltage
+    name: "Learned Full Voltage"
+    entity_category: diagnostic
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    update_interval: 60s
+    lambda: return id(batt_v_full);
+  - platform: template
+    id: battery_empty_voltage
+    name: "Observed Minimum Voltage"
+    entity_category: diagnostic
+    unit_of_measurement: "V"
+    accuracy_decimals: 3
+    update_interval: 60s
+    lambda: return id(batt_v_empty);
+  - platform: template
+    id: battery_resistance
+    name: "Pack Internal Resistance"
+    entity_category: diagnostic
+    unit_of_measurement: "Ω"
+    accuracy_decimals: 3
+    update_interval: 60s
+    lambda: return id(batt_r_internal);
+
+binary_sensor:
+  - platform: template
+    id: battery_calibrated
+    name: "Battery Calibrated"
+    entity_category: diagnostic
+    lambda: return id(batt_full_learned);
