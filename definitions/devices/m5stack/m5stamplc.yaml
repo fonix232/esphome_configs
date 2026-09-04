@@ -1,0 +1,9 @@
+---
+# M5Stack StamPLC — DIN-rail controller: 4 relays, 8 opto-isolated inputs,
+# 3 buttons, 1.14" status screen, RS485, buzzer, RTC and rail monitoring.
+substitutions:
+  framework: espidf  # arduino | espidf — overridable per instance
+
+packages:
+  board: !include ../../board/m5stack/stamplc/base.yaml
+  bt_proxy: !include ../../component/bluetooth/proxy_${framework}.yaml

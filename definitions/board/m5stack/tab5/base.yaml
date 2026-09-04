@@ -17,7 +17,10 @@ packages:
   base: !include ../../../base.yaml
   extended: !include ../../../extended.yaml
   display: !include ../../../component/display/m5stack_tab5.yaml
-  rtc: !include ../../../component/time/rx8130.yaml
+  rtc: !include
+    file: ../../../component/time/rx8130.yaml
+    vars:
+      rtc_i2c_id: bsp_bus
   charging: !include ../../../component/power/m5stack_tab5_charging.yaml
   hosted_firmware: !include ../../../component/wifi/hosted_firmware.yaml
 

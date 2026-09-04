@@ -1,0 +1,14 @@
+---
+# StamPLC with both expansion modules fitted: the AC module (mains PSU plus a
+# 240V/10A contact) and the IO module (two isolated analog channels, two SSRs
+# and a relay).
+#
+# Set the IO module's address to match its DIP switch if it isn't the 0x20
+# default, e.g. when cascading several:
+#
+#   substitutions:
+#     stamplc_io_address: "0x21"
+packages:
+  stamplc: !include m5stamplc.yaml
+  ac_module: !include ../../component/plc/m5stamplc_ac.yaml
+  io_module: !include ../../component/plc/m5stamplc_io.yaml

@@ -1,0 +1,67 @@
+---
+# StamPLC 1.14" 135x240 ST7789V, wired to the shared SPI bus alongside the SD
+# slot. Its reset line is GPIO3, held high for the whole session by the board's
+# power_supply, so no reset_pin here.
+display:
+  - id: main_display
+    platform: mipi_spi
+    model: ST7789V
+    spi_id: bus_spi
+    cs_pin: GPIO12
+    dc_pin: GPIO6
+    dimensions:
+      width: 240
+      height: 135
+      offset_width: 42
+      offset_height: 55
+    transform:
+      swap_xy: true
+      mirror_x: true
+      mirror_y: false
+    invert_colors: true
+    # Redrawn on demand — see the relay/input handlers in the board config
+    update_interval: never
+    lambda: |-
+      it.fill(Color::BLACK);
+      if (id(rtc_time).now().is_valid()) {
+        it.strftime(5, 0, id(stamplc_font), id(stamplc_amber), "%a %d %b  %H:%M", id(rtc_time).now());
+      }
+      it.line(5, 19, 234, 19, id(stamplc_grey));
+
+      it.print(5, 24, id(stamplc_font), id(stamplc_amber), "Inputs 1-8");
+      binary_sensor::BinarySensor *inputs[8] = {
+        id(input_1), id(input_2), id(input_3), id(input_4),
+        id(input_5), id(input_6), id(input_7), id(input_8),
+      };
+      for (int i = 0; i < 8; i++) {
+        it.filled_rectangle(5 + i * 29, 43, 25, 25,
+                            inputs[i]->state ? id(stamplc_violet) : id(stamplc_grey));
+      }
+
+      it.print(5, 74, id(stamplc_font), id(stamplc_amber), "Relays 1-4");
+      switch_::Switch *relays[4] = {id(relay_1), id(relay_2), id(relay_3), id(relay_4)};
+      for (int i = 0; i < 4; i++) {
+        it.filled_rectangle(5 + i * 29, 93, 25, 25,
+                            relays[i]->state ? id(stamplc_red) : id(stamplc_grey));
+      }
+
+color:
+  - id: stamplc_amber
+    hex: fff099
+  - id: stamplc_grey
+    hex: 3a3b3c
+  - id: stamplc_violet
+    hex: af69e3
+  - id: stamplc_red
+    hex: db6676
+
+font:
+  - file: "gfonts://Roboto"
+    id: stamplc_font
+    size: 15
+
+# Repaint whenever anything on screen changes, plus a tick for the clock
+interval:
+  - interval: 30s
+    then:
+      - component.update: main_display

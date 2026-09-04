@@ -1,0 +1,36 @@
+---
+# StamPLC AC module — mains-powered expansion that both feeds the StamPLC 12V
+# and switches one SPST-NO contact rated 240VAC / 10A. Relay and status LED
+# hang off a second PI4IOE5V6408 at 0x44 on the system I2C bus.
+packages:
+  ac_led: !include
+    file: ../light/binary_rgb_indicator.yaml
+    vars:
+      led_id: ac_status_led
+      led_name: AC Status LED
+      led_expander: pi4ioe_ac
+      led_pin_r: 5
+      led_pin_g: 6
+      led_pin_b: 7
+      led_initial: "Off"
+
+pi4ioe5v6408:
+  - id: pi4ioe_ac
+    address: 0x44
+    i2c_id: bus_internal
+    # 2: O - AC relay
+    # 5: O - status LED red
+    # 6: O - status LED green
+    # 7: O - status LED blue
+
+switch:
+  - platform: gpio
+    id: ac_relay
+    name: "AC Relay"
+    icon: "mdi:electric-switch"
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      pi4ioe5v6408: pi4ioe_ac
+      number: 2
+      mode:
+        output: true

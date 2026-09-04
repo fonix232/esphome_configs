@@ -1,0 +1,343 @@
+---
+# M5Stack StamPLC — StampS3 (ESP32-S3) DIN-rail PLC.
+#
+# 4 relay outputs and 8 opto-isolated inputs on an AW9523 expander, 3 front
+# buttons / status LED / LCD backlight on a PI4IOE5V6408, INA226 rail monitor,
+# LM75B temperature sensor, RX8130 RTC, buzzer, RS485 and CAN.
+#
+# Everything on the system I2C bus shares GPIO3 as a reset line, which is also
+# the LCD reset. It has to be high before any of them are probed, so the
+# power_supply below claims it — that component sets up at POWER priority,
+# ahead of both the I2C bus and the expanders, whatever order packages merge in.
+packages:
+  mcu: !include ../../../mcu/espressif/esp32-s3/${framework}.yaml
+  base: !include ../../../base.yaml
+  extended: !include ../../../extended.yaml
+  display: !include ../../../component/display/m5stack_stamplc.yaml
+  rtc: !include
+    file: ../../../component/time/rx8130.yaml
+    vars:
+      rtc_i2c_id: bus_internal
+  status_led: !include
+    file: ../../../component/light/binary_rgb_indicator.yaml
+    vars:
+      led_id: status_led
+      led_name: Status LED
+      led_expander: pi4ioe_main
+      led_pin_r: 6
+      led_pin_g: 5
+      led_pin_b: 4
+      led_initial: "Red"
+
+# AW9523 expander (relays and inputs) — not in ESPHome core
+external_components:
+  - source: github://m5stack/esphome-yaml/components
+    components: [aw9523b]
+    refresh: 1d
+
+esp32:
+  flash_size: 8MB
+
+# GPIO3 doubles as the LCD reset and the I2C expanders' reset
+power_supply:
+  - id: expander_reset_release
+    enable_on_boot: true
+    pin:
+      number: GPIO3
+      ignore_strapping_warning: true
+
+i2c:
+  - id: bus_internal
+    sda: GPIO13
+    scl: GPIO15
+    frequency: 400kHz
+    scan: true
+  # Grove Port A (red). Port B (blue) is GPIO5/GPIO4 — add it per device if used
+  - id: bus_grove_a
+    sda: GPIO2
+    scl: GPIO1
+    frequency: 100kHz
+    scan: false
+
+spi:
+  - id: bus_spi
+    clk_pin: GPIO7
+    mosi_pin: GPIO8
+    miso_pin: GPIO9
+
+# RS485, half duplex — DIR is driven as the flow control pin. Point a
+# modbus/modbus_controller at this per device.
+uart:
+  - id: uart_rs485
+    tx_pin:
+      number: GPIO0
+      ignore_strapping_warning: true
+    rx_pin: GPIO39
+    baud_rate: 9600
+    parity: EVEN
+    stop_bits: 1
+    flow_control_pin:
+      number: GPIO46
+      ignore_strapping_warning: true
+
+# CAN is on GPIO42 (TX) / GPIO43 (RX) — add a canbus: block per device if used
+
+pi4ioe5v6408:
+  - id: pi4ioe_main
+    address: 0x43
+    i2c_id: bus_internal
+    # 0: I - button C
+    # 1: I - button B
+    # 2: I - button A
+    # 4: O - status LED blue
+    # 5: O - status LED green
+    # 6: O - status LED red
+    # 7: O - LCD backlight (active low)
+
+aw9523b:
+  - id: aw9523_io
+    address: 0x59
+    i2c_id: bus_internal
+    # The relays are driven directly, not through the open-drain LED sinks
+    p0_drive_mode: PUSH_PULL
+    # 0-3:  O - relays 1-4
+    # 4-7:  I - inputs 1-4
+    # 12-15: I - inputs 5-8
+
+switch:
+  - platform: gpio
+    id: relay_1
+    name: "Relay 1"
+    icon: "mdi:electric-switch"
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      aw9523b_id: aw9523_io
+      number: 0
+      mode:
+        output: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: relay_2
+    name: "Relay 2"
+    icon: "mdi:electric-switch"
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      aw9523b_id: aw9523_io
+      number: 1
+      mode:
+        output: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: relay_3
+    name: "Relay 3"
+    icon: "mdi:electric-switch"
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      aw9523b_id: aw9523_io
+      number: 2
+      mode:
+        output: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: relay_4
+    name: "Relay 4"
+    icon: "mdi:electric-switch"
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      aw9523b_id: aw9523_io
+      number: 3
+      mode:
+        output: true
+    on_state:
+      - component.update: main_display
+
+  - platform: gpio
+    id: lcd_backlight
+    name: "LCD Backlight"
+    entity_category: config
+    icon: "mdi:television"
+    restore_mode: ALWAYS_ON
+    pin:
+      pi4ioe5v6408: pi4ioe_main
+      number: 7
+      inverted: true
+      mode:
+        output: true
+
+binary_sensor:
+  - platform: gpio
+    id: input_1
+    name: "Input 1"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 4
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: input_2
+    name: "Input 2"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 5
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: input_3
+    name: "Input 3"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 6
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: input_4
+    name: "Input 4"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 7
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: input_5
+    name: "Input 5"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 12
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: input_6
+    name: "Input 6"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 13
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: input_7
+    name: "Input 7"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 14
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+  - platform: gpio
+    id: input_8
+    name: "Input 8"
+    pin:
+      aw9523b_id: aw9523_io
+      number: 15
+      mode:
+        input: true
+    on_state:
+      - component.update: main_display
+
+  - platform: gpio
+    id: button_a
+    name: "Button A"
+    pin:
+      pi4ioe5v6408: pi4ioe_main
+      number: 2
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+  - platform: gpio
+    id: button_b
+    name: "Button B"
+    pin:
+      pi4ioe5v6408: pi4ioe_main
+      number: 1
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+  - platform: gpio
+    id: button_c
+    name: "Button C"
+    pin:
+      pi4ioe5v6408: pi4ioe_main
+      number: 0
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+
+output:
+  - platform: ledc
+    id: buzzer_out
+    pin: GPIO44
+  - platform: gpio
+    id: alert_led_out
+    pin: GPIO21
+
+rtttl:
+  id: buzzer
+  output: buzzer_out
+  gain: 60%
+
+light:
+  - platform: binary
+    id: alert_led
+    name: "Alert LED"
+    output: alert_led_out
+    restore_mode: ALWAYS_OFF
+
+sensor:
+  - platform: internal_temperature
+    name: "Chip Temp"
+    entity_category: diagnostic
+
+  # Measures the SYS_VIN rail feeding the side GPIO.EXT socket, not the relays
+  - platform: ina226
+    id: ext_power
+    address: 0x40
+    i2c_id: bus_internal
+    shunt_resistance: 0.01ohm
+    max_current: 2.0A
+    adc_averaging: 16
+    update_interval: 30s
+    bus_voltage:
+      name: "Bus Voltage"
+      entity_category: diagnostic
+    current:
+      name: "Bus Current"
+      entity_category: diagnostic
+    power:
+      name: "Bus Power"
+      entity_category: diagnostic
+
+  - platform: lm75b
+    name: "Board Temperature"
+    address: 0x48
+    i2c_id: bus_internal
+    update_interval: 60s
+    entity_category: diagnostic
+
+# Status LED mirrors the Home Assistant connection: red until the API is up
+api:
+  on_client_connected:
+    - select.set:
+        id: status_led
+        option: "Green"
+  on_client_disconnected:
+    - select.set:
+        id: status_led
+        option: "Red"
