@@ -1,0 +1,59 @@
+# Full-screen OTA progress overlay — include LAST on the top layer so it
+# covers the header and every page while firmware is being written.
+# Driven by the handlers in ota.yaml.
+# Usage:
+#   widgets:
+#     - obj: !include widgets/header.yaml
+#     - obj: !include widgets/ota_overlay.yaml
+id: ota_overlay
+hidden: true
+x: 0
+y: 0
+width: 1280
+height: 720
+bg_color: fog_page
+radius: 0
+pad_all: 0
+scrollable: false
+scrollbar_mode: "off"
+widgets:
+  - label:
+      align: center
+      y: -160
+      text: "fogOS"
+      text_font: fog_26
+      text_color: fog_accent
+  - label:
+      id: ota_title
+      align: center
+      y: -104
+      text: "Updating firmware"
+      text_font: fog_26
+      text_color: fog_ink2
+  - label:
+      id: ota_pct
+      align: center
+      y: -20
+      text_font: fog_64
+      text_color: fog_ink
+      text: "0%"
+  - bar:
+      id: ota_bar
+      align: center
+      y: 60
+      width: 560
+      height: 12
+      min_value: 0
+      max_value: 100
+      value: 0
+      bg_color: fog_well
+      radius: 6
+      indicator:
+        bg_color: fog_accent
+        radius: 6
+  - label:
+      align: center
+      y: 116
+      text: "Keep power connected — restarts when done"
+      text_font: fog_20
+      text_color: fog_muted

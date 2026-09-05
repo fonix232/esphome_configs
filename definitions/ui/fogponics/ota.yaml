@@ -1,0 +1,52 @@
+---
+# OTA progress handlers. The transfer blocks the main loop, so LVGL never gets
+# a normal render pass while it runs — every step paints synchronously via
+# lv_refr_now(), and progress repaints only on whole-percent changes to keep
+# the transfer fast. The overlay widget itself is widgets/ota_overlay.yaml
+# (last on the top layer, so it covers header and pages).
+globals:
+  # Last whole percent painted on the OTA overlay, to throttle redraws
+  - id: ota_last_pct
+    type: int
+    initial_value: '-1'
+
+ota:
+  - id: !extend ota_esphome
+    on_begin:
+      - light.turn_on:
+          id: backlight
+          brightness: 100%
+      - globals.set:
+          id: display_dimmed
+          value: 'false'
+      - globals.set:
+          id: ota_last_pct
+          value: '-1'
+      - lvgl.label.update: {id: ota_title, text: "Updating firmware"}
+      - lvgl.label.update: {id: ota_pct, text: "0%"}
+      - lvgl.bar.update: {id: ota_bar, value: 0}
+      - lvgl.widget.show: ota_overlay
+      - lambda: lv_refr_now(nullptr);
+    on_progress:
+      - if:
+          condition:
+            lambda: return ((int) x) != id(ota_last_pct);
+          then:
+            - globals.set:
+                id: ota_last_pct
+                value: !lambda return (int) x;
+            - lvgl.bar.update: {id: ota_bar, value: !lambda return (int) x;}
+            - lvgl.label.update:
+                id: ota_pct
+                text: {format: "%.0f%%", args: [x]}
+            - lambda: lv_refr_now(nullptr);
+    on_end:
+      - lvgl.bar.update: {id: ota_bar, value: 100}
+      - lvgl.label.update: {id: ota_pct, text: "100%"}
+      - lvgl.label.update: {id: ota_title, text: "Restarting…"}
+      - lambda: lv_refr_now(nullptr);
+    on_error:
+      - lvgl.label.update: {id: ota_title, text: "Update failed"}
+      - lambda: lv_refr_now(nullptr);
+      - delay: 5s
+      - lvgl.widget.hide: ota_overlay

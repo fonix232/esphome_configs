@@ -1,0 +1,24 @@
+# Columns tile — three grow-column cards.
+# Usage (in the main file's tileview):
+#   tiles:
+#     - !include screens/columns.yaml
+id: tile_columns
+row: 0
+column: 0
+dir: RIGHT
+widgets:
+  - obj: !include
+      file: ../segments/column_card.yaml
+      vars:
+        col: 1
+        x: 24
+  - obj: !include
+      file: ../segments/column_card.yaml
+      vars:
+        col: 2
+        x: 440
+  - obj: !include
+      file: ../segments/column_card.yaml
+      vars:
+        col: 3
+        x: 856

@@ -1,0 +1,29 @@
+---
+# System bindings for the header status cluster: battery %, clock, API dot.
+sensor:
+  - id: !extend battery_level
+    on_value:
+      - lvgl.label.update:
+          id: status_battery
+          text: {format: "%.0f%%", args: [x]}
+
+time:
+  - id: !extend homeassistant_time
+    on_time:
+      - seconds: 0
+        then:
+          - lvgl.label.update:
+              id: status_clock
+              text:
+                time_format: "%H:%M"
+                time: homeassistant_time
+
+api:
+  on_client_connected:
+    - lvgl.widget.update:
+        id: api_dot
+        bg_color: fog_good
+  on_client_disconnected:
+    - lvgl.widget.update:
+        id: api_dot
+        bg_color: fog_critical

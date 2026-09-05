@@ -1,0 +1,77 @@
+# One solution metric block (deduplicates pH / EC): hero number, state tag,
+# and a linear scale with a green target band and a position tick — no gauge.
+# Positions are wrapper-relative (scale track is 300px wide at x 0).
+# Usage (inside the solution card's widgets):
+#   - obj: !include
+#       file: ../segments/solution_metric.yaml
+#       vars:
+#         metric: ph            # -> loop_ph sensor; ph_* widget ids
+#         label: "pH"
+#         x: 0                  # wrapper x within the card (pH 0, EC 368)
+#         scale_min_label: "4"
+#         scale_max_label: "8"
+#         band_w: 45            # 2*tol/span * 300
+#
+# Value/tick/band/state bindings: ../bindings/solution_metric.yaml (same
+# `metric` var, plus the scale math).
+x: ${x}
+y: 0
+width: 300
+height: 208
+bg_opa: 0%
+pad_all: 0
+radius: 0
+scrollable: false
+scrollbar_mode: "off"
+widgets:
+  - label: {x: 0, y: 0, text: "${label}", styles: lbl}
+  - label:
+      id: ${metric}_val
+      x: 0
+      y: 28
+      text_font: fog_64
+      text_color: fog_ink
+      text: "-.--"
+  - obj:
+      id: ${metric}_state_dot
+      x: 212
+      y: 64
+      width: 10
+      height: 10
+      radius: 5
+      bg_color: fog_muted
+  - label: {id: "${metric}_state_lbl", x: 230, y: 58, styles: lbl2, text: "..."}
+  - obj: {x: 0, y: 140, width: 300, height: 8, radius: 4, bg_color: fog_well}
+  - obj:
+      id: ${metric}_band
+      x: 0
+      y: 140
+      width: ${band_w}
+      height: 8
+      radius: 4
+      bg_color: fog_good
+      bg_opa: 45%
+  - obj:
+      id: ${metric}_tick
+      x: 0
+      y: 132
+      width: 4
+      height: 24
+      radius: 2
+      bg_color: fog_ink
+  - label: {x: 0, y: 172, text: "${scale_min_label}", styles: lbl}
+  - label:
+      x: 284
+      y: 172
+      width: 16
+      text_align: right
+      text: "${scale_max_label}"
+      styles: lbl
+  - label:
+      id: ${metric}_target_lbl
+      x: 100
+      y: 172
+      width: 100
+      text_align: center
+      styles: lbl
+      text: "target -.-"

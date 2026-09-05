@@ -1,0 +1,65 @@
+# One grow-column card (deduplicates the three near-identical cards).
+# Usage (inside a tile's widgets):
+#   - obj: !include
+#       file: ../segments/column_card.yaml
+#       vars:
+#         col: 1        # column number -> col1_* entity/widget ids
+#         x: 24         # card x position
+#
+# Fogger chip is state-only (fogOS controls the foggers); pod tank shows the
+# water pod on top of the column. Bindings: ../bindings/column.yaml.
+x: ${x}
+y: 88
+width: 400
+height: 608
+styles: card
+scrollable: false
+scrollbar_mode: "off"
+widgets:
+  - label: {x: 0, y: 4, text: "Column ${col}", styles: title}
+  - obj:
+      id: col${col}_fog_chip
+      x: 240
+      y: 0
+      width: 120
+      height: 36
+      radius: 18
+      bg_color: fog_well
+      pad_all: 0
+      widgets:
+        - label:
+            id: col${col}_fog_lbl
+            align: center
+            text: "Idle"
+            text_font: fog_20
+            text_color: fog_muted
+  - label: {x: 0, y: 78, text: "Pod water", styles: lbl}
+  - bar:
+      id: col${col}_pod_bar
+      x: 0
+      y: 112
+      width: 32
+      height: 150
+      min_value: 0
+      max_value: 100
+      value: 0
+      bg_color: fog_well
+      radius: 6
+      indicator:
+        bg_color: fog_accent
+        radius: 6
+  - label:
+      id: col${col}_pod_lbl
+      x: 52
+      y: 222
+      styles: value
+      text: "--%"
+  - obj: {x: 0, y: 300, width: 360, height: 1, radius: 0, bg_color: fog_hairline}
+  - label: {x: 0, y: 336, text: "Temp °C", styles: lbl}
+  - label: {id: "col${col}_temp_lbl", x: 0, y: 366, styles: value, text: "--.-"}
+  - label: {x: 184, y: 336, text: "Humidity %", styles: lbl}
+  - label: {id: "col${col}_hum_lbl", x: 184, y: 366, styles: value, text: "--"}
+  - label: {x: 0, y: 460, text: "VOC ppm", styles: lbl}
+  - label: {id: "col${col}_voc_lbl", x: 0, y: 490, styles: value, text: "-.--"}
+  - label: {x: 184, y: 460, text: "CO2 ppm", styles: lbl}
+  - label: {id: "col${col}_co2_lbl", x: 184, y: 490, styles: value, text: "---"}

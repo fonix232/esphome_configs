@@ -1,0 +1,235 @@
+---
+# Mock data sources for the fogponics UI — the data contract the UI binds to.
+#
+# fogOS will eventually provide every entity here (same ids, most likely as
+# platform: homeassistant imports once fogOS speaks the HA API). Swap this
+# package for the fogOS-backed one and the UI needs no changes.
+#
+# Sensor values drift on slow sine waves so the UI visibly updates; entities
+# carry ids only (no name:), so nothing is exported over the API while mocking.
+#
+# Contract summary:
+#   Columns (n = 1..3):
+#     colN_pod_level %        water level in the pod on top of the column
+#     colN_fogger             binary state of the ultrasonic fogger (not controllable)
+#     ENV Pro (BME688), measuring fogger output in the column:
+#       colN_temperature °C, colN_humidity %, colN_voc ppm (bVOC), colN_co2 ppm (eCO2)
+#   Lights: light_{left,right}_power switch,
+#     light_{left,right}_intensity 0-100, light_{left,right}_spectrum 0-100 (red→blue)
+#   Reservoirs:
+#     loop_level / fresh_level / nutrient_level %  (container fullness)
+#     loop_ph, loop_ec mS/cm, loop_pump switch
+#     ph_target / ec_target   set by fogOS from the plant/stage database
+#     dosed_fresh_24h L, dosed_fresh_7d L, dosed_nutrient_24h mL, dosed_nutrient_7d mL
+#     nutrient_ratio mL/L     dial-in for the fresh:nutrient mix
+#     top_up                  pump fresh + nutrients (at nutrient_ratio) to the ideal level
+
+sensor:
+  # ---- Column 1
+  - platform: template
+    id: col1_pod_level
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: return 65.0f + 20.0f * sinf(millis() / 240000.0f);
+  - platform: template
+    id: col1_temperature
+    unit_of_measurement: "°C"
+    update_interval: 5s
+    lambda: return 21.5f + 1.5f * sinf(millis() / 180000.0f + 1.0f);
+  - platform: template
+    id: col1_humidity
+    unit_of_measurement: "%"
+    update_interval: 5s
+    lambda: return 88.0f + 6.0f * sinf(millis() / 150000.0f + 1.0f);
+  - platform: template
+    id: col1_voc
+    unit_of_measurement: "ppm"
+    update_interval: 5s
+    lambda: return 0.65f + 0.35f * sinf(millis() / 210000.0f + 1.0f);
+  - platform: template
+    id: col1_co2
+    unit_of_measurement: "ppm"
+    update_interval: 5s
+    lambda: return 640.0f + 120.0f * sinf(millis() / 260000.0f + 1.0f);
+
+  # ---- Column 2
+  - platform: template
+    id: col2_pod_level
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: return 55.0f + 25.0f * sinf(millis() / 300000.0f + 2.0f);
+  - platform: template
+    id: col2_temperature
+    unit_of_measurement: "°C"
+    update_interval: 5s
+    lambda: return 21.5f + 1.5f * sinf(millis() / 180000.0f + 2.0f);
+  - platform: template
+    id: col2_humidity
+    unit_of_measurement: "%"
+    update_interval: 5s
+    lambda: return 88.0f + 6.0f * sinf(millis() / 150000.0f + 2.0f);
+  - platform: template
+    id: col2_voc
+    unit_of_measurement: "ppm"
+    update_interval: 5s
+    lambda: return 0.65f + 0.35f * sinf(millis() / 210000.0f + 2.0f);
+  - platform: template
+    id: col2_co2
+    unit_of_measurement: "ppm"
+    update_interval: 5s
+    lambda: return 640.0f + 120.0f * sinf(millis() / 260000.0f + 2.0f);
+
+  # ---- Column 3
+  - platform: template
+    id: col3_pod_level
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: return 70.0f + 15.0f * sinf(millis() / 270000.0f + 4.0f);
+  - platform: template
+    id: col3_temperature
+    unit_of_measurement: "°C"
+    update_interval: 5s
+    lambda: return 21.5f + 1.5f * sinf(millis() / 180000.0f + 3.0f);
+  - platform: template
+    id: col3_humidity
+    unit_of_measurement: "%"
+    update_interval: 5s
+    lambda: return 88.0f + 6.0f * sinf(millis() / 150000.0f + 3.0f);
+  - platform: template
+    id: col3_voc
+    unit_of_measurement: "ppm"
+    update_interval: 5s
+    lambda: return 0.65f + 0.35f * sinf(millis() / 210000.0f + 3.0f);
+  - platform: template
+    id: col3_co2
+    unit_of_measurement: "ppm"
+    update_interval: 5s
+    lambda: return 640.0f + 120.0f * sinf(millis() / 260000.0f + 3.0f);
+
+  # ---- Reservoirs
+  - platform: template
+    id: loop_level
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: return 62.0f + 18.0f * sinf(millis() / 360000.0f);
+  - platform: template
+    id: fresh_level
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: return 80.0f + 15.0f * sinf(millis() / 900000.0f);
+  - platform: template
+    id: nutrient_level
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: return 45.0f + 20.0f * sinf(millis() / 800000.0f + 1.0f);
+  - platform: template
+    id: loop_ph
+    update_interval: 5s
+    lambda: return 5.9f + 0.35f * sinf(millis() / 420000.0f);
+  - platform: template
+    id: loop_ec
+    unit_of_measurement: "mS/cm"
+    update_interval: 5s
+    lambda: return 1.75f + 0.35f * sinf(millis() / 380000.0f + 2.0f);
+
+  # Targets — fogOS derives these from the plant/stage database; static-ish here
+  - platform: template
+    id: ph_target
+    update_interval: 60s
+    lambda: return 5.8f;
+  - platform: template
+    id: ec_target
+    unit_of_measurement: "mS/cm"
+    update_interval: 60s
+    lambda: return 1.8f;
+
+  # Dosing totals — fogOS integrates pump runtime into volumes
+  - platform: template
+    id: dosed_fresh_24h
+    unit_of_measurement: "L"
+    update_interval: 30s
+    lambda: return 1.6f + 0.8f * sinf(millis() / 500000.0f);
+  - platform: template
+    id: dosed_fresh_7d
+    unit_of_measurement: "L"
+    update_interval: 60s
+    lambda: return 10.5f + 2.5f * sinf(millis() / 900000.0f);
+  - platform: template
+    id: dosed_nutrient_24h
+    unit_of_measurement: "mL"
+    update_interval: 30s
+    lambda: return 60.0f + 25.0f * sinf(millis() / 500000.0f + 1.0f);
+  - platform: template
+    id: dosed_nutrient_7d
+    unit_of_measurement: "mL"
+    update_interval: 60s
+    lambda: return 420.0f + 80.0f * sinf(millis() / 900000.0f + 1.0f);
+
+# Foggers are fogOS-controlled — the UI only shows their state.
+# Phase-shifted duty cycles so the three chips visibly differ.
+binary_sensor:
+  - platform: template
+    id: col1_fogger
+    lambda: return fmodf(millis() / 1000.0f, 300.0f) < 240.0f;
+  - platform: template
+    id: col2_fogger
+    lambda: return fmodf(millis() / 1000.0f + 100.0f, 300.0f) < 200.0f;
+  - platform: template
+    id: col3_fogger
+    lambda: return fmodf(millis() / 1000.0f + 200.0f, 300.0f) < 220.0f;
+
+switch:
+  - platform: template
+    id: loop_pump
+    optimistic: true
+  - platform: template
+    id: light_left_power
+    optimistic: true
+  - platform: template
+    id: light_right_power
+    optimistic: true
+
+number:
+  - platform: template
+    id: light_left_intensity
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 80
+    optimistic: true
+  - platform: template
+    id: light_right_intensity
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 80
+    optimistic: true
+  # 0 = deep red … 100 = blue
+  - platform: template
+    id: light_left_spectrum
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 35
+    optimistic: true
+  - platform: template
+    id: light_right_spectrum
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 35
+    optimistic: true
+  # mL of nutrient concentrate per L of fresh water for top-ups
+  - platform: template
+    id: nutrient_ratio
+    min_value: 5
+    max_value: 50
+    step: 5
+    initial_value: 35
+    optimistic: true
+
+button:
+  - platform: template
+    id: top_up
+    on_press:
+      - logger.log: "mock: topping up loop with fresh + nutrients at nutrient_ratio"

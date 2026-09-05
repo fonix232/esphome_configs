@@ -1,0 +1,25 @@
+---
+# HTTP display screenshot endpoint (definitions/external_component/display_capture,
+# vendored from https://github.com/ay129-35MR/esphome-display-screenshot).
+#
+#   GET http://<device>/screenshot       -> 24-bit BMP of the current frame
+#   GET http://<device>/screenshot/info  -> JSON metadata (dimensions, mode)
+#
+# Requires web_server (common/webserver.yaml, pulled in via extended.yaml) and
+# PSRAM for the BMP buffer. Pass vars matching the display driver:
+#
+#   screenshot_display_id  the display's id
+#   screenshot_backend     display_buffer  ILI9XXX/ST7789V etc. (default)
+#                          rpi_dpi_rgb     ESP32-S3 RGB LCD panels
+#                          mipi_dsi        ESP32-P4 DSI panels (reads the DPI
+#                                          scan-out framebuffer, LVGL-safe)
+#
+# The BMP comes out in the display's native orientation — if LVGL does the
+# rotation (display rotation 0°), rotate the image client-side.
+substitutions:
+  screenshot_display_id: main_display
+  screenshot_backend: display_buffer
+
+display_capture:
+  display_id: ${screenshot_display_id}
+  backend: ${screenshot_backend}

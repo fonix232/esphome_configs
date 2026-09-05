@@ -1,0 +1,52 @@
+# One reservoir tank: % value above a vertical fill bar, name below.
+# Positions are wrapper-relative; the wrapper is transparent.
+# Usage (inside the reservoirs card's widgets):
+#   - obj: !include
+#       file: ../segments/tank.yaml
+#       vars:
+#         tank: loop            # -> loop_tank bar id, loop_val label id
+#         label: "Loop"
+#         x: 22                 # wrapper x within the card
+#         fill: fog_accent      # fog_accent (water) / fog_aqua (nutrient)
+#
+# Level bindings live in ../bindings/reservoirs.yaml. The loop tank's
+# target/min tick marks are card-level overlays in screens/reservoirs.yaml.
+x: ${x}
+y: 66
+width: 104
+height: 420
+bg_opa: 0%
+pad_all: 0
+radius: 0
+scrollable: false
+scrollbar_mode: "off"
+widgets:
+  - label:
+      id: ${tank}_val
+      x: 0
+      y: 0
+      width: 104
+      text_align: center
+      styles: value
+      text: "--%"
+  - bar:
+      id: ${tank}_tank
+      x: 0
+      y: 46
+      width: 104
+      height: 330
+      min_value: 0
+      max_value: 100
+      value: 0
+      bg_color: fog_well
+      radius: 8
+      indicator:
+        bg_color: ${fill}
+        radius: 8
+  - label:
+      x: 0
+      y: 386
+      width: 104
+      text_align: center
+      text: "${label}"
+      styles: lbl

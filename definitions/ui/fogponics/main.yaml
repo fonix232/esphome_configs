@@ -1,0 +1,145 @@
+---
+# fogOS — fogponics control UI for the M5Stack Tab5 (1280x720 landscape).
+#
+# This file is assembly only; the components in this folder do the real work:
+#   theme.yaml / fonts.yaml   color tokens & Barlow type scale
+#   hardware.yaml             display/touch overrides + dim-wake
+#   ota.yaml                  update-progress handlers (overlay in widgets/)
+#   nav.yaml                  tileview navigation scripts + dev page buttons
+#   widgets/                  header, OTA overlay (top-layer widgets)
+#   screens/                  one file per tile (Columns / Lights / Reservoirs)
+#   segments/                 parameterized cards the screens compose
+#   bindings/                 entity -> widget glue (parameterized per unit)
+#
+# Binds by id to the entities of component/hydro/fogponics_mock.yaml — swap
+# that package for a fogOS-backed one with the same ids and this UI is live.
+packages:
+  theme: !include theme.yaml
+  fonts: !include fonts.yaml
+  hardware: !include hardware.yaml
+  ota: !include ota.yaml
+  nav: !include nav.yaml
+
+  bind_col1: !include
+    file: bindings/column.yaml
+    vars:
+      col: 1
+  bind_col2: !include
+    file: bindings/column.yaml
+    vars:
+      col: 2
+  bind_col3: !include
+    file: bindings/column.yaml
+    vars:
+      col: 3
+  bind_light_left: !include
+    file: bindings/light.yaml
+    vars:
+      side: left
+  bind_light_right: !include
+    file: bindings/light.yaml
+    vars:
+      side: right
+  bind_ph: !include
+    file: bindings/solution_metric.yaml
+    vars:
+      metric: ph
+      scale_min: "4.0"
+      scale_span: "4.0"
+      tol: "0.3"
+      band_x_max: 255
+  bind_ec: !include
+    file: bindings/solution_metric.yaml
+    vars:
+      metric: ec
+      scale_min: "0.0"
+      scale_span: "3.0"
+      tol: "0.2"
+      band_x_max: 260
+  bind_reservoirs: !include bindings/reservoirs.yaml
+  bind_system: !include bindings/system.yaml
+
+lvgl:
+  displays: main_display
+  touchscreens: main_touch
+  rotation: 270
+  # Whole-frame draw buffer: fewer render/flush round-trips per frame, which
+  # matters most while the tileview drags full-screen content around.
+  buffer_size: 100%
+  default_font: fog_20
+  bg_color: fog_page
+  text_color: fog_ink
+  border_width: 0
+  outline_width: 0
+
+  on_idle:
+    - timeout: 5min
+      then:
+        - light.turn_on:
+            id: backlight
+            brightness: 15%
+        - globals.set:
+            id: display_dimmed
+            value: 'true'
+
+  style_definitions:
+    - id: card
+      bg_color: fog_surface
+      radius: 10
+      pad_all: 20
+    - id: lbl            # secondary label, muted
+      text_font: fog_20
+      text_color: fog_muted
+    - id: lbl2           # secondary label, brighter
+      text_font: fog_20
+      text_color: fog_ink2
+    - id: title
+      text_font: fog_26
+      text_color: fog_ink
+    - id: value
+      text_font: fog_32
+      text_color: fog_ink
+
+  top_layer:
+    widgets:
+      - obj: !include widgets/header.yaml
+      # Last on the top layer — covers everything during updates
+      - obj: !include widgets/ota_overlay.yaml
+
+  # Content lives in a tileview: drag-with-snap pagination between the three
+  # tiles; the header tabs select tiles and stay in sync via on_value.
+  widgets:
+    - tileview:
+        id: main_tiles
+        x: 0
+        y: 0
+        width: 1280
+        height: 720
+        bg_color: fog_page
+        pad_all: 0
+        scrollbar_mode: "off"
+        # No fling-to-turn: a quick flick would snap instantly with barely a
+        # rendered frame, reading as a hard page swap. Position-based snapping
+        # makes the drag follow the finger and return unless pulled past halfway.
+        scroll_momentum: false
+        scroll_one: true
+        on_value:
+          - if:
+              condition:
+                lambda: return tile == id(tile_columns);
+              then:
+                - script.execute: tabs_columns
+          - if:
+              condition:
+                lambda: return tile == id(tile_lights);
+              then:
+                - script.execute: tabs_lights
+          - if:
+              condition:
+                lambda: return tile == id(tile_reservoirs);
+              then:
+                - script.execute: tabs_reservoirs
+        tiles:
+          - !include screens/columns.yaml
+          - !include screens/lights.yaml
+          - !include screens/reservoirs.yaml

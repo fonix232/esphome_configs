@@ -1,0 +1,44 @@
+---
+# Entity -> widget bindings for one grow column.
+# Usage (main file packages, once per column):
+#   bind_col1: !include
+#     file: bindings/column.yaml
+#     vars:
+#       col: 1
+sensor:
+  - id: !extend col${col}_pod_level
+    on_value:
+      - lvgl.bar.update: {id: "col${col}_pod_bar", value: !lambda return (int) x;}
+      - lvgl.label.update:
+          id: col${col}_pod_lbl
+          text: {format: "%.0f%%", args: [x]}
+  - id: !extend col${col}_temperature
+    on_value:
+      - lvgl.label.update:
+          id: col${col}_temp_lbl
+          text: {format: "%.1f", args: [x]}
+  - id: !extend col${col}_humidity
+    on_value:
+      - lvgl.label.update:
+          id: col${col}_hum_lbl
+          text: {format: "%.0f", args: [x]}
+  - id: !extend col${col}_voc
+    on_value:
+      - lvgl.label.update:
+          id: col${col}_voc_lbl
+          text: {format: "%.2f", args: [x]}
+  - id: !extend col${col}_co2
+    on_value:
+      - lvgl.label.update:
+          id: col${col}_co2_lbl
+          text: {format: "%.0f", args: [x]}
+
+# Fogger state chip (state display only, not a control)
+binary_sensor:
+  - id: !extend col${col}_fogger
+    on_press:
+      - lvgl.widget.update: {id: "col${col}_fog_chip", bg_color: fog_good, bg_opa: 25%}
+      - lvgl.label.update: {id: "col${col}_fog_lbl", text: "Fogging", text_color: fog_good}
+    on_release:
+      - lvgl.widget.update: {id: "col${col}_fog_chip", bg_color: fog_well, bg_opa: 100%}
+      - lvgl.label.update: {id: "col${col}_fog_lbl", text: "Idle", text_color: fog_muted}

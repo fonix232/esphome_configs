@@ -1,0 +1,49 @@
+---
+# Entity -> widget bindings for one solution metric (pH or EC): hero value,
+# scale tick, in-range state vs target, and target band position. The scale
+# track is 300px wide; tick/band x are relative to the segment wrapper.
+# Usage (main file packages):
+#   bind_ph: !include
+#     file: bindings/solution_metric.yaml
+#     vars:
+#       metric: ph        # -> loop_ph / ph_target sensors, ph_* widgets
+#       scale_min: "4.0"
+#       scale_span: "4.0"
+#       tol: "0.3"        # in-range tolerance around target
+#       band_x_max: 255   # 300 - band_w (band_w = 2*tol/span * 300)
+sensor:
+  - id: !extend loop_${metric}
+    on_value:
+      - lvgl.label.update:
+          id: ${metric}_val
+          text: {format: "%.2f", args: [x]}
+      - lvgl.widget.update:
+          id: ${metric}_tick
+          x: !lambda |-
+            int px = (int) ((x - ${scale_min}f) / ${scale_span}f * 300.0f) - 2;
+            return std::max(0, std::min(296, px));
+      - if:
+          condition:
+            lambda: return fabsf(x - id(${metric}_target).state) <= ${tol}f;
+          then:
+            - lvgl.widget.update: {id: "${metric}_state_dot", bg_color: fog_good}
+            - lvgl.label.update: {id: "${metric}_state_lbl", text: "In range"}
+          else:
+            - lvgl.widget.update: {id: "${metric}_state_dot", bg_color: fog_warn}
+            - lvgl.label.update:
+                id: ${metric}_state_lbl
+                text: !lambda |-
+                  return x < id(${metric}_target).state ? std::string("Low") : std::string("High");
+
+  # Target repositions the green band (fogOS derives targets from the
+  # plant/stage database)
+  - id: !extend ${metric}_target
+    on_value:
+      - lvgl.widget.update:
+          id: ${metric}_band
+          x: !lambda |-
+            int px = (int) ((x - ${tol}f - ${scale_min}f) / ${scale_span}f * 300.0f);
+            return std::max(0, std::min(${band_x_max}, px));
+      - lvgl.label.update:
+          id: ${metric}_target_lbl
+          text: {format: "target %.1f", args: [x]}

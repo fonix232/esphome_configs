@@ -1,0 +1,100 @@
+# One growlight card (deduplicates left/right).
+# Usage (inside a tile's widgets):
+#   - obj: !include
+#       file: ../segments/light_card.yaml
+#       vars:
+#         side: left          # -> light_left_* entity/widget ids
+#         title: "Left light"
+#         x: 24               # card x position
+#
+# Bindings: ../bindings/light.yaml (same `side` var).
+x: ${x}
+y: 88
+width: 608
+height: 420
+styles: card
+scrollable: false
+scrollbar_mode: "off"
+widgets:
+  - label: {x: 0, y: 4, text: "${title}", styles: title}
+  - switch:
+      id: light_${side}_sw
+      gesture_bubble: false
+      x: 492
+      y: 0
+      width: 76
+      height: 38
+      bg_color: fog_well
+      indicator:
+        checked:
+          bg_color: fog_accent
+      knob:
+        bg_color: fog_ink
+      on_value:
+        - if:
+            condition:
+              lambda: return x;
+            then:
+              - switch.turn_on: light_${side}_power
+            else:
+              - switch.turn_off: light_${side}_power
+  - label: {x: 0, y: 96, text: "Intensity", styles: lbl}
+  - label:
+      id: light_${side}_int_lbl
+      x: 468
+      y: 96
+      width: 100
+      text_align: right
+      styles: lbl2
+      text: "--%"
+  - slider:
+      id: light_${side}_int_slider
+      gesture_bubble: false
+      x: 0
+      y: 140
+      width: 568
+      height: 10
+      min_value: 0
+      max_value: 100
+      value: 80
+      bg_color: fog_well
+      radius: 5
+      indicator:
+        bg_color: fog_accent
+      knob:
+        bg_color: fog_ink
+      on_release:
+        - number.set:
+            id: light_${side}_intensity
+            value: !lambda return x;
+  - label: {x: 0, y: 228, text: "Spectrum", styles: lbl}
+  - slider:
+      id: light_${side}_spec_slider
+      gesture_bubble: false
+      x: 0
+      y: 272
+      width: 568
+      height: 14
+      min_value: 0
+      max_value: 100
+      value: 35
+      radius: 7
+      bg_color: fog_critical
+      bg_grad_color: fog_accent
+      bg_grad_dir: HOR
+      indicator:
+        bg_opa: 0%
+      knob:
+        bg_color: fog_ink
+      on_release:
+        - number.set:
+            id: light_${side}_spectrum
+            value: !lambda return x;
+  - label: {x: 0, y: 312, text: "Red", styles: lbl}
+  - label:
+      x: 528
+      y: 312
+      width: 40
+      text_align: right
+      text: "Blue"
+      styles: lbl

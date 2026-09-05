@@ -1,0 +1,21 @@
+# Lights tile — left/right growlight cards.
+# Usage (in the main file's tileview):
+#   tiles:
+#     - !include screens/lights.yaml
+id: tile_lights
+row: 0
+column: 1
+dir: HOR
+widgets:
+  - obj: !include
+      file: ../segments/light_card.yaml
+      vars:
+        side: left
+        title: "Left light"
+        x: 24
+  - obj: !include
+      file: ../segments/light_card.yaml
+      vars:
+        side: right
+        title: "Right light"
+        x: 648

@@ -1,0 +1,17 @@
+---
+# M5Stack Tab5 as the fogOS fogponics control panel.
+#
+# Extends the plain Tab5 with the hydroponics UI and — for now — mocked data
+# sources. When fogOS starts providing the real entities, replace the
+# hydro_data package with a fogOS-backed one exposing the same ids (contract
+# documented in component/hydro/fogponics_mock.yaml).
+packages:
+  tab5: !include m5stack_tab5.yaml
+  hydro_data: !include ../../component/hydro/fogponics_mock.yaml
+  ui: !include ../../ui/fogponics/main.yaml
+  # UI development aid: GET http://<device>/screenshot returns the current frame
+  screenshot: !include
+    file: ../../component/display/screenshot.yaml
+    vars:
+      screenshot_display_id: main_display
+      screenshot_backend: mipi_dsi

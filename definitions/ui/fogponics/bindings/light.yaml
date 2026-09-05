@@ -1,0 +1,30 @@
+---
+# Entity -> widget bindings for one growlight side.
+# Usage (main file packages, once per side):
+#   bind_light_left: !include
+#     file: bindings/light.yaml
+#     vars:
+#       side: left
+switch:
+  - id: !extend light_${side}_power
+    on_turn_on:
+      - lvgl.widget.update:
+          id: light_${side}_sw
+          state:
+            checked: true
+    on_turn_off:
+      - lvgl.widget.update:
+          id: light_${side}_sw
+          state:
+            checked: false
+
+number:
+  - id: !extend light_${side}_intensity
+    on_value:
+      - lvgl.slider.update: {id: "light_${side}_int_slider", value: !lambda return (int) x;}
+      - lvgl.label.update:
+          id: light_${side}_int_lbl
+          text: {format: "%.0f%%", args: [x]}
+  - id: !extend light_${side}_spectrum
+    on_value:
+      - lvgl.slider.update: {id: "light_${side}_spec_slider", value: !lambda return (int) x;}

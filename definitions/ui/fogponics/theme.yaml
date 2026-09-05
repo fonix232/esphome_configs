@@ -1,0 +1,43 @@
+---
+# fogOS UI palette — dark instrument panel.
+#
+# Base surfaces/ink follow a validated dark-mode dataviz palette; one identity
+# accent (water blue) for the wordmark / active tab / tank fills / interactive
+# indicators; aqua only for nutrient concentrate (a different substance).
+# Status colors are reserved for state and always ship with a text label.
+color:
+  # Surfaces
+  - id: fog_page
+    hex: 0d0d0d
+  - id: fog_surface
+    hex: 1a1a19
+  - id: fog_well          # recessed tracks / tank interiors / chips
+    hex: "232322"
+  - id: fog_hairline
+    hex: 2c2c2a
+  - id: fog_baseline
+    hex: "383835"
+
+  # Ink
+  - id: fog_ink
+    hex: ffffff
+  - id: fog_ink2
+    hex: c3c2b7
+  - id: fog_muted
+    hex: "898781"
+
+  # Identity
+  - id: fog_accent        # water
+    hex: 3987e5
+  - id: fog_aqua          # nutrient concentrate
+    hex: 199e70
+
+  # Status (reserved — never decorative)
+  - id: fog_good
+    hex: 0ca30c
+  - id: fog_warn
+    hex: fab219
+  - id: fog_serious
+    hex: ec835a
+  - id: fog_critical
+    hex: d03b3b

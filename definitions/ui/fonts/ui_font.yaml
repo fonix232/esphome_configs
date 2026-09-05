@@ -1,0 +1,15 @@
+---
+# Parameterized Google-Fonts include: family, weight, size and id per instance.
+#
+#   packages:
+#     font_value: !include
+#       file: fonts/ui_font.yaml
+#       vars: {font_family: Barlow, font_weight: 500, font_size: 32, font_name: fog_32}
+font:
+  - file:
+      type: gfonts
+      family: ${font_family}
+      weight: ${font_weight}
+    size: ${font_size}
+    id: ${font_name}
+    bpp: 4

@@ -1,0 +1,35 @@
+---
+# fogOS type scale — Barlow, four compiled sizes.
+#   fog_20  labels / units          (400)
+#   fog_26  titles / tabs / header  (600)
+#   fog_32  metric values           (500)
+#   fog_64  pH / EC hero numbers    (600)
+font:
+  - file:
+      type: gfonts
+      family: Barlow
+      weight: 400
+    size: 20
+    id: fog_20
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Barlow
+      weight: 600
+    size: 26
+    id: fog_26
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Barlow
+      weight: 500
+    size: 32
+    id: fog_32
+    bpp: 4
+  - file:
+      type: gfonts
+      family: Barlow
+      weight: 600
+    size: 64
+    id: fog_64
+    bpp: 4

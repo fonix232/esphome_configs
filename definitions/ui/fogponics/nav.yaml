@@ -1,0 +1,80 @@
+---
+# Page navigation.
+#
+# nav_*: navigate (tab tap / web button). The tileview animates to the tile
+# and fires on_value, which runs the matching tabs_* visual sync — swipes
+# take the same path, so tab state can never drift from the visible page.
+#
+# The "UI Page ..." template buttons switch pages remotely so /screenshot can
+# capture each page during development.
+button:
+  - platform: template
+    name: "UI Page Columns"
+    entity_category: config
+    on_press:
+      - script.execute: nav_columns
+  - platform: template
+    name: "UI Page Lights"
+    entity_category: config
+    on_press:
+      - script.execute: nav_lights
+  - platform: template
+    name: "UI Page Reservoirs"
+    entity_category: config
+    on_press:
+      - script.execute: nav_reservoirs
+
+script:
+  - id: nav_columns
+    then:
+      - lvgl.tileview.select:
+          id: main_tiles
+          tile_id: tile_columns
+          animated: true
+  - id: nav_lights
+    then:
+      - lvgl.tileview.select:
+          id: main_tiles
+          tile_id: tile_lights
+          animated: true
+  - id: nav_reservoirs
+    then:
+      - lvgl.tileview.select:
+          id: main_tiles
+          tile_id: tile_reservoirs
+          animated: true
+
+  # tabs_*: header visuals only — called from the tileview's on_value
+  - id: tabs_columns
+    then:
+      - lvgl.widget.update: {id: tab_columns_btn, bg_opa: 100%}
+      - lvgl.widget.update: {id: tab_lights_btn, bg_opa: 0%}
+      - lvgl.widget.update: {id: tab_reservoirs_btn, bg_opa: 0%}
+      - lvgl.widget.show: tab_columns_bar
+      - lvgl.widget.hide: tab_lights_bar
+      - lvgl.widget.hide: tab_reservoirs_bar
+      - lvgl.label.update: {id: tab_columns_lbl, text_color: fog_ink}
+      - lvgl.label.update: {id: tab_lights_lbl, text_color: fog_muted}
+      - lvgl.label.update: {id: tab_reservoirs_lbl, text_color: fog_muted}
+  - id: tabs_lights
+    then:
+      - lvgl.widget.update: {id: tab_columns_btn, bg_opa: 0%}
+      - lvgl.widget.update: {id: tab_lights_btn, bg_opa: 100%}
+      - lvgl.widget.update: {id: tab_reservoirs_btn, bg_opa: 0%}
+      - lvgl.widget.hide: tab_columns_bar
+      - lvgl.widget.show: tab_lights_bar
+      - lvgl.widget.hide: tab_reservoirs_bar
+      - lvgl.label.update: {id: tab_columns_lbl, text_color: fog_muted}
+      - lvgl.label.update: {id: tab_lights_lbl, text_color: fog_ink}
+      - lvgl.label.update: {id: tab_reservoirs_lbl, text_color: fog_muted}
+  - id: tabs_reservoirs
+    then:
+      - lvgl.widget.update: {id: tab_columns_btn, bg_opa: 0%}
+      - lvgl.widget.update: {id: tab_lights_btn, bg_opa: 0%}
+      - lvgl.widget.update: {id: tab_reservoirs_btn, bg_opa: 100%}
+      - lvgl.widget.hide: tab_columns_bar
+      - lvgl.widget.hide: tab_lights_bar
+      - lvgl.widget.show: tab_reservoirs_bar
+      - lvgl.label.update: {id: tab_columns_lbl, text_color: fog_muted}
+      - lvgl.label.update: {id: tab_lights_lbl, text_color: fog_muted}
+      - lvgl.label.update: {id: tab_reservoirs_lbl, text_color: fog_ink}

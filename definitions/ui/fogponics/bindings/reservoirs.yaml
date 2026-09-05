@@ -1,0 +1,64 @@
+---
+# Entity -> widget bindings for the reservoirs screen: tank levels, dosing
+# totals, nutrient ratio, loop pump. (pH/EC bindings are parameterized in
+# bindings/solution_metric.yaml.)
+sensor:
+  - id: !extend loop_level
+    on_value:
+      - lvgl.bar.update: {id: loop_tank, value: !lambda return (int) x;}
+      - lvgl.label.update:
+          id: loop_val
+          text: {format: "%.0f%%", args: [x]}
+  - id: !extend fresh_level
+    on_value:
+      - lvgl.bar.update: {id: fresh_tank, value: !lambda return (int) x;}
+      - lvgl.label.update:
+          id: fresh_val
+          text: {format: "%.0f%%", args: [x]}
+  - id: !extend nutrient_level
+    on_value:
+      - lvgl.bar.update: {id: nutrient_tank, value: !lambda return (int) x;}
+      - lvgl.label.update:
+          id: nutrient_val
+          text: {format: "%.0f%%", args: [x]}
+
+  - id: !extend dosed_fresh_24h
+    on_value:
+      - lvgl.label.update:
+          id: dosed_fresh_lbl
+          text: {format: "%.1f L", args: [x]}
+  - id: !extend dosed_fresh_7d
+    on_value:
+      - lvgl.label.update:
+          id: dosed_fresh_7d_lbl
+          text: {format: "7 d: %.1f L", args: [x]}
+  - id: !extend dosed_nutrient_24h
+    on_value:
+      - lvgl.label.update:
+          id: dosed_nutrient_lbl
+          text: {format: "%.0f mL", args: [x]}
+  - id: !extend dosed_nutrient_7d
+    on_value:
+      - lvgl.label.update:
+          id: dosed_nutrient_7d_lbl
+          text: {format: "7 d: %.0f mL", args: [x]}
+
+switch:
+  - id: !extend loop_pump
+    on_turn_on:
+      - lvgl.widget.update:
+          id: loop_pump_sw
+          state:
+            checked: true
+    on_turn_off:
+      - lvgl.widget.update:
+          id: loop_pump_sw
+          state:
+            checked: false
+
+number:
+  - id: !extend nutrient_ratio
+    on_value:
+      - lvgl.label.update:
+          id: ratio_lbl
+          text: {format: "%.0f mL/L", args: [x]}

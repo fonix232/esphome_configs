@@ -1,0 +1,149 @@
+# fogOS header — persistent bar on the LVGL top layer.
+# Usage (in the main file's lvgl top_layer):
+#   widgets:
+#     - obj: !include widgets/header.yaml
+#
+# Wordmark left, page tabs center (active tab = lit surface block + accent
+# bar on the baseline, synced by the tabs_* scripts in nav.yaml), API dot +
+# battery + clock right-aligned, hairline on the bottom edge.
+x: 0
+y: 0
+width: 1280
+height: 64
+bg_color: fog_page
+pad_all: 0
+radius: 0
+scrollable: false
+scrollbar_mode: "off"
+widgets:
+  - label:
+      align: left_mid
+      x: 24
+      text: "fogOS"
+      text_font: fog_26
+      text_color: fog_accent
+
+  - button:
+      id: tab_columns_btn
+      x: 370
+      y: 0
+      width: 180
+      height: 63
+      radius: 0
+      pad_all: 0
+      bg_color: fog_surface
+      bg_opa: 100%
+      pressed:
+        bg_color: fog_well
+        bg_opa: 100%
+      widgets:
+        - label:
+            id: tab_columns_lbl
+            align: center
+            text: "Columns"
+            text_font: fog_26
+            text_color: fog_ink
+        - obj:
+            id: tab_columns_bar
+            align: bottom_mid
+            width: 180
+            height: 3
+            radius: 0
+            bg_color: fog_accent
+      on_click:
+        - script.execute: nav_columns
+  - button:
+      id: tab_lights_btn
+      x: 550
+      y: 0
+      width: 180
+      height: 63
+      radius: 0
+      pad_all: 0
+      bg_color: fog_surface
+      bg_opa: 0%
+      pressed:
+        bg_color: fog_well
+        bg_opa: 100%
+      widgets:
+        - label:
+            id: tab_lights_lbl
+            align: center
+            text: "Lights"
+            text_font: fog_26
+            text_color: fog_muted
+        - obj:
+            id: tab_lights_bar
+            align: bottom_mid
+            width: 180
+            height: 3
+            radius: 0
+            bg_color: fog_accent
+            hidden: true
+      on_click:
+        - script.execute: nav_lights
+  - button:
+      id: tab_reservoirs_btn
+      x: 730
+      y: 0
+      width: 180
+      height: 63
+      radius: 0
+      pad_all: 0
+      bg_color: fog_surface
+      bg_opa: 0%
+      pressed:
+        bg_color: fog_well
+        bg_opa: 100%
+      widgets:
+        - label:
+            id: tab_reservoirs_lbl
+            align: center
+            text: "Reservoirs"
+            text_font: fog_26
+            text_color: fog_muted
+        - obj:
+            id: tab_reservoirs_bar
+            align: bottom_mid
+            width: 180
+            height: 3
+            radius: 0
+            bg_color: fog_accent
+            hidden: true
+      on_click:
+        - script.execute: nav_reservoirs
+
+  # Status cluster, right-aligned
+  - obj:
+      id: api_dot
+      align: right_mid
+      x: -240
+      width: 10
+      height: 10
+      radius: 5
+      bg_color: fog_critical
+  - label:
+      id: status_battery
+      align: right_mid
+      x: -136
+      width: 90
+      text_align: right
+      text_font: fog_26
+      text_color: fog_ink2
+      text: "---%"
+  - label:
+      id: status_clock
+      align: right_mid
+      x: -24
+      width: 96
+      text_align: right
+      text_font: fog_26
+      text_color: fog_ink
+      text: "--:--"
+  - obj:
+      x: 0
+      y: 63
+      width: 1280
+      height: 1
+      radius: 0
+      bg_color: fog_hairline

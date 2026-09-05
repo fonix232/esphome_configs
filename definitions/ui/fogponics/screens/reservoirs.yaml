@@ -1,0 +1,172 @@
+# Reservoirs tile — tanks card, solution (pH/EC) card, dosing card.
+# Usage (in the main file's tileview):
+#   tiles:
+#     - !include screens/reservoirs.yaml
+id: tile_reservoirs
+row: 0
+column: 2
+dir: LEFT
+widgets:
+  # ---- Tanks
+  - obj:
+      x: 24
+      y: 88
+      width: 508
+      height: 608
+      styles: card
+      scrollable: false
+      scrollbar_mode: "off"
+      widgets:
+        - label: {x: 0, y: 4, text: "Reservoirs", styles: title}
+        - obj: !include
+            file: ../segments/tank.yaml
+            vars:
+              tank: loop
+              label: "Loop"
+              x: 22
+              fill: fog_accent
+        - obj: !include
+            file: ../segments/tank.yaml
+            vars:
+              tank: fresh
+              label: "Fresh"
+              x: 182
+              fill: fog_accent
+        - obj: !include
+            file: ../segments/tank.yaml
+            vars:
+              tank: nutrient
+              label: "Nutrient"
+              x: 342
+              fill: fog_aqua
+        # Loop target (80%) and minimum (25%) marks, drawn over the loop tank
+        - obj: {x: 14, y: 178, width: 120, height: 3, radius: 0, bg_color: fog_muted}
+        - obj: {x: 14, y: 358, width: 120, height: 3, radius: 0, bg_color: fog_critical}
+        - switch:
+            id: loop_pump_sw
+            gesture_bubble: false
+            x: 22
+            y: 508
+            width: 76
+            height: 38
+            bg_color: fog_well
+            indicator:
+              checked:
+                bg_color: fog_accent
+            knob:
+              bg_color: fog_ink
+            on_value:
+              - if:
+                  condition:
+                    lambda: return x;
+                  then:
+                    - switch.turn_on: loop_pump
+                  else:
+                    - switch.turn_off: loop_pump
+        - label: {x: 114, y: 516, text: "Loop pump", styles: lbl2}
+
+  # ---- Solution (pH / EC — hero + target band, no gauges)
+  - obj:
+      x: 548
+      y: 88
+      width: 708
+      height: 288
+      styles: card
+      scrollable: false
+      scrollbar_mode: "off"
+      widgets:
+        - obj: !include
+            file: ../segments/solution_metric.yaml
+            vars:
+              metric: ph
+              label: "pH"
+              x: 0
+              scale_min_label: "4"
+              scale_max_label: "8"
+              band_w: 45
+        - obj: !include
+            file: ../segments/solution_metric.yaml
+            vars:
+              metric: ec
+              label: "EC mS/cm"
+              x: 368
+              scale_min_label: "0"
+              scale_max_label: "3"
+              band_w: 40
+
+  # ---- Dosing
+  - obj:
+      x: 548
+      y: 392
+      width: 708
+      height: 304
+      styles: card
+      scrollable: false
+      scrollbar_mode: "off"
+      widgets:
+        - label: {x: 0, y: 4, text: "Dosing", styles: title}
+        - label: {x: 0, y: 56, text: "Fresh, 24 h", styles: lbl}
+        - label: {id: dosed_fresh_lbl, x: 0, y: 86, styles: value, text: "-.- L"}
+        - label: {id: dosed_fresh_7d_lbl, x: 0, y: 128, styles: lbl2, text: "7 d: -.- L"}
+        - label: {x: 210, y: 56, text: "Nutrient, 24 h", styles: lbl}
+        - label: {id: dosed_nutrient_lbl, x: 210, y: 86, styles: value, text: "-- mL"}
+        - label: {id: dosed_nutrient_7d_lbl, x: 210, y: 128, styles: lbl2, text: "7 d: -- mL"}
+
+        - label: {x: 0, y: 176, text: "Nutrient ratio", styles: lbl}
+        - button:
+            x: 0
+            y: 204
+            width: 52
+            height: 52
+            radius: 8
+            bg_color: fog_well
+            widgets:
+              - label: {align: center, text: "-", text_font: fog_26, text_color: fog_ink}
+            on_click:
+              - number.decrement: nutrient_ratio
+        - label:
+            id: ratio_lbl
+            x: 62
+            y: 216
+            width: 120
+            text_align: center
+            text_font: fog_26
+            text_color: fog_ink
+            text: "-- mL/L"
+        - button:
+            x: 192
+            y: 204
+            width: 52
+            height: 52
+            radius: 8
+            bg_color: fog_well
+            widgets:
+              - label: {align: center, text: "+", text_font: fog_26, text_color: fog_ink}
+            on_click:
+              - number.increment: nutrient_ratio
+
+        - button:
+            x: 448
+            y: 56
+            width: 220
+            height: 200
+            radius: 10
+            bg_color: fog_accent
+            pressed:
+              bg_color: 0x2f6fbe
+            widgets:
+              - label:
+                  align: center
+                  y: -20
+                  text: "Top up loop"
+                  text_font: fog_26
+                  text_color: fog_ink
+              - label:
+                  align: center
+                  y: 20
+                  text: "fresh + nutrients"
+                  text_font: fog_20
+                  text_color: fog_ink
+                  text_opa: 80%
+            on_click:
+              - button.press: top_up
