@@ -12,6 +12,10 @@
 # 70% is the default, 60% would be closer to the storage optimum if the smaller
 # reserve is acceptable.
 #
+# Quick charge normally follows the quick_charge_below threshold, but a user
+# turning the Quick Charge switch on is honored until the active charge target
+# is reached — the policy never reverts an explicit user request.
+#
 # There is deliberately no periodic automatic full charge. The usual "calibrate
 # every three months" advice exists for coulomb-counting gauges, which
 # accumulate integration error and need full-charge and full-discharge flags to
@@ -56,6 +60,19 @@ globals:
     type: bool
     initial_value: "false"
     restore_value: false
+  # True while the script itself is flipping quick_charge, so its own writes
+  # don't register as user intent in the switch triggers below
+  - id: quick_by_script
+    type: bool
+    initial_value: "false"
+    restore_value: false
+  # The user turned quick charge on — honor it until the charge target is
+  # reached instead of reverting it on the next policy pass. Not restored:
+  # the switch itself boots off, so a stale request would outlive its state.
+  - id: quick_user_request
+    type: bool
+    initial_value: "false"
+    restore_value: false
 
 switch:
   - platform: gpio
@@ -79,6 +96,18 @@ switch:
       number: 5
       inverted: true
     restore_mode: ALWAYS_OFF
+    # Any toggle not bracketed by quick_by_script came from the user
+    on_turn_on:
+      - lambda: |-
+          if (!id(quick_by_script)) {
+            id(quick_user_request) = true;
+            ESP_LOGI("tab5.charge", "quick charge set by user, held until target");
+          }
+    on_turn_off:
+      - lambda: |-
+          if (!id(quick_by_script)) {
+            id(quick_user_request) = false;
+          }
 
 binary_sensor:
   - platform: gpio
@@ -381,6 +410,19 @@ script:
           }
           // "Manual" falls through with both switches left as the user set them
 
+          // A quick charge the user switched on is theirs: the policy may add
+          // to it but never revert it. It releases once the active target is
+          // reached (or the user turns it off, handled at the switch).
+          if (id(quick_user_request)) {
+            const float quick_until = to_full ? 99.5f : id(charge_target).state;
+            if (have_level && level >= quick_until) {
+              id(quick_user_request) = false;
+              ESP_LOGI("tab5.charge", "target reached, releasing user quick charge");
+            } else {
+              want_quick = true;
+            }
+          }
+
           // Trust a settled reading rather than the estimate when the decision
           // is close, since an uncompensated 100mV is ~4% of this pack
           const float decide_at = to_full ? 99.5f : id(charge_target).state;
@@ -417,7 +459,9 @@ script:
           if (mode != "Manual") {
             if (want_quick != id(quick_charge).state) {
               ESP_LOGI("tab5.charge", "quick charge -> %s", want_quick ? "1A" : "0.5A");
+              id(quick_by_script) = true;
               want_quick ? id(quick_charge).turn_on() : id(quick_charge).turn_off();
+              id(quick_by_script) = false;
             }
             if (want_charge != id(charge_enable).state) {
               ESP_LOGI("tab5.charge", "charging -> %s (%.2fV, %.0f%%)",
