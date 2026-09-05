@@ -57,6 +57,16 @@ esp32:
     advanced:
       # MIPI-DSI and the ESP-Hosted SDIO transport are still gated behind this
       enable_idf_experimental_features: true
+    sdkconfig_options:
+      # The DSI panel is kept fed by its ISR. Flash writes (OTA chunks, NVS
+      # commits) disable the cache, and if that ISR can't run the panel
+      # underruns and flashes light blue. Keep the ISR and the DW-GDMA
+      # functions it relies on in IRAM so refresh survives flash operations.
+      # (The DW_GDMA options below are also auto-selected by the LCD one.)
+      CONFIG_LCD_DSI_ISR_CACHE_SAFE: "y"
+      CONFIG_DW_GDMA_ISR_IRAM_SAFE: "y"
+      CONFIG_DW_GDMA_CTRL_FUNC_IN_IRAM: "y"
+      CONFIG_DW_GDMA_SETTER_FUNC_IN_IRAM: "y"
 
 psram:
   mode: hex
