@@ -10,7 +10,10 @@ touchscreen:
     reset_pin:
       pi4ioe5v6408: pi4ioe1
       number: 5
-    update_interval: never
+    # Unlike the GT911, this driver finishes its init (incl. attaching the
+    # interrupt) inside update() -- with `never` it stays dead forever, so it
+    # must poll. The interrupt still delivers low-latency touches once attached.
+    update_interval: 50ms
     transform:
       swap_xy: true
       mirror_x: true
